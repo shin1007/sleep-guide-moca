@@ -574,6 +574,10 @@ export default function App() {
             return;
           }
 
+          if (currentPhaseRef.current === 'gap') {
+            return;
+          }
+
           if (statusRef.current === 'playing') {
             updateStatus('paused');
           }
