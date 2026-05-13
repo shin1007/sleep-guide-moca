@@ -142,36 +142,14 @@ export function getStageHue(stage: StageId) {
 
 export function createQueue(settings: SleepSettings) {
   const pmr = sleepLibrary.stages.pmr.map((track) => {
-    let queueItems: QueueItem[] = [{ ...track, delayAfterMs: 350 }]; // Default delay
-
+    let delayAfterMs = 350; // Default delay
     if ([6, 11, 14, 17, 21, 24].includes(track.order)) {
-      // Replace 5-second delay with a 10-second silence track
-      const silence5s: QueueItem = {
-        id: `pmr:${String(track.order).padStart(3, '0')}:silence:5s`,
-        stage: track.stage,
-        order: track.order, // Keep original order to maintain sequence context
-        title: 'Silence (approx. 5s)', // Indicate approximate duration
-        audioUrl: createLoopableSilenceUrl(), // Use the 10s silence URL
-        speechContent: '',
-        delayAfterMs: 0, // The silence track itself will play
-      };
-      queueItems = [{ ...track, delayAfterMs: 0 }, silence5s]; // Play original track, then silence
+      delayAfterMs = 5000; // 5 seconds delay
     } else if ([9, 13, 16, 19, 23, 26, 29].includes(track.order)) {
-      // Replace 10-second delay with a 10-second silence track
-      const silence10s: QueueItem = {
-        id: `pmr:${String(track.order).padStart(3, '0')}:silence:10s`,
-        stage: track.stage,
-        order: track.order, // Keep original order
-        title: 'Silence (approx. 10s)', // Indicate approximate duration
-        audioUrl: createLoopableSilenceUrl(), // Use the 10s silence URL
-        speechContent: '',
-        delayAfterMs: 0, // The silence track itself will play
-      };
-      queueItems = [{ ...track, delayAfterMs: 0 }, silence10s]; // Play original track, then silence
+      delayAfterMs = 10000; // 10 seconds delay
     }
-    
-    return queueItems;
-  }).flat(); // Flatten the array of arrays to a single array of QueueItems
+    return { ...track, delayAfterMs };
+  });
   
   // Split breathing into intro (0-3) and steps (4-6)
   const breathingIntro = sleepLibrary.stages.breathing
