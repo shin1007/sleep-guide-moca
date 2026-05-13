@@ -574,6 +574,11 @@ export default function App() {
             return;
           }
 
+          const element = audioRef.current;
+          if (element && element.ended) {
+            return;
+          }
+
           if (currentPhaseRef.current === 'gap') {
             return;
           }
