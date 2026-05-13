@@ -99,8 +99,13 @@ export default function App() {
 
     // Apply voice volume to audio element
     audioRef.current.volume = clamp(settings.masterVolume * settings.voiceVolume);
-    syncNoisePlayback();
   }, [settings.masterVolume, settings.voiceVolume, settings.noiseVolume, settings.noiseType, status]);
+
+  useEffect(() => {
+    if (status === 'playing') {
+      syncNoisePlayback();
+    }
+  }, [status]);
 
   function updateSettings(nextSettings: SleepSettings) {
     settingsRef.current = nextSettings;
@@ -158,7 +163,6 @@ export default function App() {
     updateStatus('playing');
     setStatusMessage('再生を開始しました。');
 
-    syncNoisePlayback();
     void startCurrentTrack(nextQueue[0]);
 
     scheduleSessionSave();
@@ -265,7 +269,6 @@ export default function App() {
     }
 
     trackTransitionRef.current = true;
-    syncNoisePlayback();
     // prepare audio with volume 0 to avoid click
     if (audioRef.current) {
       try {
@@ -317,7 +320,6 @@ export default function App() {
     setGapRemainingMs(nextDelay);
     currentGapRemainingRef.current = nextDelay;
     gapStartedAtRef.current = Date.now();
-    syncNoisePlayback();
 
     if (nextDelay === 0) {
       advanceQueue();
