@@ -9,6 +9,7 @@ import {
   type StageId,
 } from './lib/catalog';
 import { createWhiteNoiseController } from './lib/noise';
+import { createLoopableSilenceUrl } from './lib/silence';
 import { loadSettings, saveSession, saveSettings, type PlaybackSession } from './lib/storage';
 
 type PlaybackStatus = 'idle' | 'playing' | 'paused';
@@ -16,6 +17,7 @@ type GapTimer = ReturnType<typeof window.setTimeout> | null;
 
 export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const silenceAudioRef = useRef<HTMLAudioElement | null>(null);
   const noiseControllerRef = useRef<ReturnType<typeof createWhiteNoiseController> | null>(null);
   const gapTimerRef = useRef<GapTimer>(null);
   const warmupAbortRef = useRef<AbortController | null>(null);
@@ -322,6 +324,18 @@ export default function App() {
     currentGapRemainingRef.current = nextDelay;
     gapStartedAtRef.current = Date.now();
 
+    // Play silence to keep AudioContext alive on iOS
+    if (silenceAudioRef.current && nextDelay > 0) {
+      try {
+        silenceAudioRef.current.volume = 0;
+        silenceAudioRef.current.src = createLoopableSilenceUrl();
+        silenceAudioRef.current.loop = true;
+        void silenceAudioRef.current.play().catch(() => {
+          // iOS may require user interaction; ignore errors
+        });
+      } catch {}
+    }
+
     if (nextDelay === 0) {
       advanceQueue();
       return;
@@ -334,6 +348,14 @@ export default function App() {
   }
 
   function advanceQueue() {
+    // Stop silence audio from gap
+    if (silenceAudioRef.current) {
+      try {
+        silenceAudioRef.current.pause();
+        silenceAudioRef.current.currentTime = 0;
+      } catch {}
+    }
+
     const nextIndex = currentIndexRef.current + 1;
     currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
@@ -588,6 +610,14 @@ export default function App() {
             updateStatus('paused');
           }
         }}
+      />
+
+      {/* Hidden audio element for silence during gaps - keeps AudioContext alive on iOS */}
+      <audio
+        ref={silenceAudioRef}
+        preload="auto"
+        playsInline
+        style={{ display: 'none' }}
       />
 
       <section className="hero-card">
