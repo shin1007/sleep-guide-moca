@@ -99,14 +99,7 @@ export default function App() {
 
     // Apply voice volume to audio element
     audioRef.current.volume = clamp(settings.masterVolume * settings.voiceVolume);
-    
-    // Apply noise volume to noise controller
-    const noiseVol = clamp(settings.masterVolume * settings.noiseVolume * 0.25);
-    if (noiseVol > 0.001) {
-      void noiseControllerRef.current?.start(noiseVol, settings.noiseType);
-    } else {
-      noiseControllerRef.current?.setVolume(0);
-    }
+    syncNoisePlayback();
   }, [settings.masterVolume, settings.voiceVolume, settings.noiseVolume, settings.noiseType, status]);
 
   function updateSettings(nextSettings: SleepSettings) {
@@ -165,13 +158,8 @@ export default function App() {
     updateStatus('playing');
     setStatusMessage('再生を開始しました。');
 
+    syncNoisePlayback();
     void startCurrentTrack(nextQueue[0]);
-
-    // Explicitly start noise when playback begins
-    const noiseVol = clamp(settings.masterVolume * settings.noiseVolume * 0.25);
-    if (noiseVol > 0.001 && noiseControllerRef.current) {
-      void noiseControllerRef.current.start(noiseVol, settings.noiseType);
-    }
 
     scheduleSessionSave();
   }
@@ -277,6 +265,7 @@ export default function App() {
     }
 
     trackTransitionRef.current = true;
+    syncNoisePlayback();
     // prepare audio with volume 0 to avoid click
     if (audioRef.current) {
       try {
@@ -328,6 +317,7 @@ export default function App() {
     setGapRemainingMs(nextDelay);
     currentGapRemainingRef.current = nextDelay;
     gapStartedAtRef.current = Date.now();
+    syncNoisePlayback();
 
     if (nextDelay === 0) {
       advanceQueue();
@@ -491,6 +481,15 @@ export default function App() {
 
   function clamp(value: number) {
     return Math.min(1, Math.max(0, value));
+  }
+
+  function syncNoisePlayback() {
+    const noiseVol = clamp(settingsRef.current.masterVolume * settingsRef.current.noiseVolume * 0.25);
+    if (noiseVol > 0.001 && noiseControllerRef.current) {
+      void noiseControllerRef.current.start(noiseVol, settingsRef.current.noiseType);
+    } else {
+      noiseControllerRef.current?.setVolume(0);
+    }
   }
 
   function sleep(ms: number) {
