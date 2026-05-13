@@ -179,19 +179,25 @@ export function buildArtworkDataUri(stage: StageId, subtitle: string) {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
       <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="hsl(${hue} 45% 15%)" />
-          <stop offset="100%" stop-color="hsl(${(hue + 32) % 360} 45% 28%)" />
+          <stop offset="0%" stop-color="#0b1120" />
+          <stop offset="100%" stop-color="#050816" />
         </linearGradient>
         <radialGradient id="glow" cx="50%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="hsla(${(hue + 22) % 360} 100% 75% / 0.95)" />
-          <stop offset="100%" stop-color="hsla(${(hue + 22) % 360} 100% 75% / 0)" />
+          <stop offset="0%" stop-color="#f97316" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#f97316" stop-opacity="0" />
         </radialGradient>
       </defs>
       <rect width="512" height="512" rx="96" fill="url(#bg)" />
-      <circle cx="380" cy="136" r="76" fill="url(#glow)" />
-      <path d="M122 316c41-7 74-34 85-70 8-26 8-54 0-82 42 8 76 40 86 84 13 57-22 112-78 126-36 9-72 1-93-18z" fill="hsla(0 0% 100% / 0.92)" />
-      <text x="64" y="388" fill="hsla(0 0% 100% / 0.9)" font-size="36" font-family="system-ui, sans-serif">${escapeXml(label)}</text>
-      <text x="64" y="432" fill="hsla(0 0% 100% / 0.72)" font-size="24" font-family="system-ui, sans-serif">${escapeXml(subtitle)}</text>
+      <circle cx="256" cy="256" r="256" fill="url(#glow)" />
+      
+      <!-- Accent Line -->
+      <rect x="64" y="340" width="40" height="4" rx="2" fill="#f97316" />
+      
+      <path d="M122 316c41-7 74-34 85-70 8-26 8-54 0-82 42 8 76 40 86 84 13 57-22 112-78 126-36 9-72 1-93-18z" fill="#fbbf24" />
+      
+      <text x="64" y="320" fill="#f97316" font-size="24" font-weight="800" font-family="sans-serif" letter-spacing="4">MIYAMAI MOCA</text>
+      <text x="64" y="388" fill="#f8fafc" font-size="42" font-weight="800" font-family="sans-serif">${escapeXml(label)}</text>
+      <text x="64" y="432" fill="#94a3b8" font-size="24" font-family="sans-serif">${escapeXml(subtitle)}</text>
     </svg>
   `;
 

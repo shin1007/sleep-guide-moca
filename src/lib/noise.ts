@@ -1,8 +1,8 @@
 export type NoiseType = 'white' | 'pink' | 'brown';
 
 export interface WhiteNoiseController {
-  start(volume: number, type?: NoiseType): Promise<void>;
-  setVolume(volume: number): void;
+  start(volume: number, type?: NoiseType, timeConstant?: number): Promise<void>;
+  setVolume(volume: number, timeConstant?: number): void;
   stop(): void;
 }
 
@@ -13,7 +13,7 @@ export function createWhiteNoiseController() {
   let currentType: NoiseType | null = null;
   let pendingVolume = 0.18;
 
-  async function ensureStarted(volume: number, type: NoiseType) {
+  async function ensureStarted(volume: number, type: NoiseType, timeConstant?: number) {
     pendingVolume = volume;
 
     if (!context) {
@@ -33,11 +33,13 @@ export function createWhiteNoiseController() {
       source = null;
     }
 
+    let isFreshStart = false;
     if (!source) {
       if (volume < 0.001) {
         return;
       }
 
+      isFreshStart = true;
       currentType = type;
       const buffer = buildNoiseBuffer(context, 2, type);
       const filter = context.createBiquadFilter();
@@ -59,18 +61,22 @@ export function createWhiteNoiseController() {
     }
 
     if (gainNode) {
-      gainNode.gain.setTargetAtTime(volume, context.currentTime, 0.02);
+      if (isFreshStart) {
+        gainNode.gain.value = 0;
+      }
+      const tc = timeConstant ?? (isFreshStart ? 0.8 : 0.02);
+      gainNode.gain.setTargetAtTime(volume, context.currentTime, tc);
     }
   }
 
   return {
-    async start(volume: number, type: NoiseType = 'white') {
-      await ensureStarted(volume, type);
+    async start(volume: number, type: NoiseType = 'white', timeConstant?: number) {
+      await ensureStarted(volume, type, timeConstant);
     },
-    setVolume(volume: number) {
+    setVolume(volume: number, timeConstant = 0.02) {
       pendingVolume = volume;
       if (context && gainNode) {
-        gainNode.gain.setTargetAtTime(volume, context.currentTime, 0.02);
+        gainNode.gain.setTargetAtTime(volume, context.currentTime, timeConstant);
       }
     },
     stop() {

@@ -93,7 +93,7 @@ export default function App() {
 
   // Apply volume changes immediately during playback
   useEffect(() => {
-    if (status !== 'playing' || !audioRef.current) {
+    if (status !== 'playing' || !audioRef.current || trackTransitionRef.current) {
       return;
     }
 
@@ -202,8 +202,6 @@ export default function App() {
       void fadeAudioTo(0, 120).then(() => {
         audioRef.current?.pause();
       });
-    } else {
-      audioRef.current?.pause();
     }
 
     if (noiseControllerRef.current) {
@@ -274,10 +272,17 @@ export default function App() {
     trackTransitionRef.current = true;
     // prepare audio with volume 0 to avoid click
     if (audioRef.current) {
-      audioRef.current.volume = 0;
-      audioRef.current.pause();
-      audioRef.current.src = track.audioUrl;
-      audioRef.current.currentTime = Math.max(0, resumeTime);
+      try {
+        audioRef.current.volume = 0;
+        audioRef.current.pause();
+        audioRef.current.src = track.audioUrl;
+        audioRef.current.load(); // Force reset of audio element
+        if (resumeTime > 0) {
+          audioRef.current.currentTime = resumeTime;
+        }
+      } catch (err) {
+        console.warn('Audio reset warning:', err);
+      }
     }
     const voiceVol = clamp(settings.masterVolume * settings.voiceVolume);
 
@@ -548,16 +553,18 @@ export default function App() {
   );
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${status === 'playing' ? 'is-playing' : ''}`}>
       <audio
         ref={audioRef}
         preload="auto"
         playsInline
-        crossOrigin="anonymous"
         onEnded={onAudioEnded}
         onTimeUpdate={onTimeUpdate}
         onError={(e) => {
-          console.error('Audio error:', audioRef.current?.error, 'src:', audioRef.current?.src);
+          const err = audioRef.current?.error;
+          const msg = err ? `Audio error: ${err.code} ${err.message}` : 'Unknown audio error';
+          console.error(msg, 'src:', audioRef.current?.src);
+          setStatusMessage(msg);
         }}
         onPause={() => {
           if (trackTransitionRef.current) {
@@ -572,7 +579,10 @@ export default function App() {
 
       <section className="hero-card">
         <div className="hero-header">
-          <h1>宮舞モカとおやすみ</h1>
+          <div className="title-group">
+            <WatsonIcon />
+            <h1>宮舞モカとおやすみ</h1>
+          </div>
           <div className="hero-buttons">
             <button className="primary" onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}>
               {status === 'paused' ? '再開' : '再生'}
@@ -688,5 +698,19 @@ function Slider({ label, value, onChange, extra }: { label: string; value: numbe
       </span>
       <input type="range" min={0} max={1} step={0.01} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
+  );
+}
+
+function WatsonIcon() {
+  return (
+    <div className="watson-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C10.3 2 9 3.3 9 5V6.1C7.3 6.6 6 8.1 6 10V17C6 18.1 6.9 19 8 19H16C17.1 19 18 18.1 18 17V10C18 8.1 16.7 6.6 15 6.1V5C15 3.3 13.7 2 12 2ZM11 5C11 4.4 11.4 4 12 4C12.6 4 13 4.4 13 5V6H11V5ZM8 10C8 8.9 8.9 8 10 8H14C15.1 8 16 8.9 16 10V17H8V10ZM10 11V13H11V11H10ZM13 11V13H14V11H13ZM10 14V16H11V14H10ZM13 14V16H14V14H13Z" fill="currentColor"/>
+        <path d="M7 21C7 20.4 7.4 20 8 20H16C16.6 20 17 20.4 17 21C17 21.6 16.6 22 16 22H8C7.4 22 7 21.6 7 21Z" fill="currentColor"/>
+        {/* Cat Ears */}
+        <path d="M6 8L4 5L8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M18 8L20 5L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
   );
 }
