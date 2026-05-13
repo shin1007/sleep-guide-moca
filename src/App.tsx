@@ -113,7 +113,7 @@ export default function App() {
           gapTimerRef.current = null;
         }
 
-        if (remaining <= 0) {
+        if (document.visibilityState !== 'visible' || remaining <= 0) {
           advanceQueue();
           return;
         }
@@ -465,6 +465,15 @@ export default function App() {
     clearTrackAdvanceTimer();
 
     const nextDelay = Math.max(0, delayMs);
+    if (document.visibilityState !== 'visible') {
+      currentPhaseRef.current = 'track';
+      setPhase('track');
+      setGapRemainingMs(0);
+      currentGapRemainingRef.current = 0;
+      advanceQueue();
+      return;
+    }
+
     if (statusRef.current !== 'playing') {
       updateStatus('playing');
     }
