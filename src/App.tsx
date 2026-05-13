@@ -106,6 +106,25 @@ export default function App() {
   useEffect(() => {
     if (status === 'playing') {
       syncNoisePlayback();
+      // Keep silence playing to maintain AudioContext on iOS
+      if (silenceAudioRef.current) {
+        try {
+          silenceAudioRef.current.volume = 0;
+          silenceAudioRef.current.src = createLoopableSilenceUrl();
+          silenceAudioRef.current.loop = true;
+          void silenceAudioRef.current.play().catch(() => {
+            // iOS may require user interaction; ignore errors
+          });
+        } catch {}
+      }
+    } else {
+      // Stop silence when not playing
+      if (silenceAudioRef.current) {
+        try {
+          silenceAudioRef.current.pause();
+          silenceAudioRef.current.currentTime = 0;
+        } catch {}
+      }
     }
   }, [status]);
 
@@ -243,6 +262,14 @@ export default function App() {
       void fadeOutNoiseAndStop();
     }
 
+    // Stop silence audio
+    if (silenceAudioRef.current) {
+      try {
+        silenceAudioRef.current.pause();
+        silenceAudioRef.current.currentTime = 0;
+      } catch {}
+    }
+
     currentQueueRef.current = [];
     currentIndexRef.current = 0;
     currentPhaseRef.current = 'track';
@@ -324,18 +351,6 @@ export default function App() {
     currentGapRemainingRef.current = nextDelay;
     gapStartedAtRef.current = Date.now();
 
-    // Play silence to keep AudioContext alive on iOS
-    if (silenceAudioRef.current && nextDelay > 0) {
-      try {
-        silenceAudioRef.current.volume = 0;
-        silenceAudioRef.current.src = createLoopableSilenceUrl();
-        silenceAudioRef.current.loop = true;
-        void silenceAudioRef.current.play().catch(() => {
-          // iOS may require user interaction; ignore errors
-        });
-      } catch {}
-    }
-
     if (nextDelay === 0) {
       advanceQueue();
       return;
@@ -348,14 +363,6 @@ export default function App() {
   }
 
   function advanceQueue() {
-    // Stop silence audio from gap
-    if (silenceAudioRef.current) {
-      try {
-        silenceAudioRef.current.pause();
-        silenceAudioRef.current.currentTime = 0;
-      } catch {}
-    }
-
     const nextIndex = currentIndexRef.current + 1;
     currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
