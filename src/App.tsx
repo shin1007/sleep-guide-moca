@@ -50,7 +50,7 @@ export default function App() {
   useEffect(() => {
     noiseControllerRef.current = createWhiteNoiseController();
     return () => {
-      noiseControllerRef.current?.stop();
+      noiseControllerRef.current?.destroy();
     };
   }, []);
 
@@ -203,7 +203,8 @@ export default function App() {
       });
     }
 
-    if (noiseControllerRef.current) {
+    // Only stop noise if we're not in a gap (gap keeps noise running)
+    if (currentPhaseRef.current !== 'gap' && noiseControllerRef.current) {
       void fadeOutNoiseAndStop();
     }
 

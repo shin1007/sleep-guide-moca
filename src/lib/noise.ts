@@ -4,6 +4,7 @@ export interface WhiteNoiseController {
   start(volume: number, type?: NoiseType, timeConstant?: number): Promise<void>;
   setVolume(volume: number, timeConstant?: number): void;
   stop(): void;
+  destroy(): void;
 }
 
 export function createWhiteNoiseController() {
@@ -80,6 +81,28 @@ export function createWhiteNoiseController() {
       }
     },
     stop() {
+      // Stop and disconnect source, but keep context for reuse (especially on iOS)
+      if (source) {
+        try {
+          source.stop();
+        } catch {}
+        source.disconnect();
+      }
+
+      // Mute gain node instead of disconnecting to preserve the audio chain
+      if (gainNode) {
+        try {
+          gainNode.gain.setTargetAtTime(0, context?.currentTime ?? 0, 0.02);
+        } catch {}
+        // Don't disconnect - keep the chain intact for iOS compatibility
+      }
+
+      source = null;
+      currentType = null;
+      // Keep context and gainNode for reuse on next start()
+    },
+    destroy() {
+      // Fully clean up context - called only on component unmount
       if (source) {
         try {
           source.stop();
