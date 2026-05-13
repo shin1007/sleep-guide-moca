@@ -16,8 +16,6 @@ export function createWhiteNoiseController() {
   let isStarted = false;
 
   async function ensureStarted(volume: number, type: NoiseType, timeConstant?: number) {
-    pendingVolume = volume;
-
     if (!context) {
       context = new AudioContext();
     }
@@ -31,9 +29,12 @@ export function createWhiteNoiseController() {
       if (gainNode && volume !== pendingVolume) {
         const tc = timeConstant ?? 0.02;
         gainNode.gain.setTargetAtTime(volume, context.currentTime, tc);
+        pendingVolume = volume;
       }
       return;
     }
+
+    pendingVolume = volume;
 
     // If type changed, disconnect and restart
     if (source) {

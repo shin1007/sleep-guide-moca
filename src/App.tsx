@@ -517,10 +517,13 @@ export default function App() {
 
   function syncNoisePlayback() {
     const noiseVol = clamp(settingsRef.current.masterVolume * settingsRef.current.noiseVolume * 0.25);
-    if (noiseVol > 0.001 && noiseControllerRef.current) {
-      void noiseControllerRef.current.start(noiseVol, settingsRef.current.noiseType);
+    if (!noiseControllerRef.current) return;
+    
+    if (noiseVol > 0.001) {
+      // Start only on first call, then just adjust volume
+      void noiseControllerRef.current.start(noiseVol, settingsRef.current.noiseType, 0.02);
     } else {
-      noiseControllerRef.current?.setVolume(0);
+      noiseControllerRef.current.setVolume(0);
     }
   }
 
