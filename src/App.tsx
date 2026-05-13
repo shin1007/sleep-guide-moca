@@ -31,6 +31,7 @@ export default function App() {
   const gapStartedAtRef = useRef(0);
   const currentTimeRef = useRef(0);
   const timerEndsAtRef = useRef<number | null>(null);
+  const lastAdvanceAtRef = useRef(0);
   
 
   const [settings, setSettingsState] = useState<SleepSettings>(() => loadSettings());
@@ -93,6 +94,35 @@ export default function App() {
       window.clearTimeout(timeout);
     };
   }, [timerEndsAt, status]);
+
+  useEffect(() => {
+    const element = audioRef.current;
+    if (!element) {
+      return;
+    }
+
+    const handleEndedNative = () => {
+      onAudioEnded();
+    };
+
+    const handleTimeUpdateNative = () => {
+      onTimeUpdate();
+    };
+
+    const handlePauseNative = () => {
+      onAudioPause();
+    };
+
+    element.addEventListener('ended', handleEndedNative);
+    element.addEventListener('timeupdate', handleTimeUpdateNative);
+    element.addEventListener('pause', handlePauseNative);
+
+    return () => {
+      element.removeEventListener('ended', handleEndedNative);
+      element.removeEventListener('timeupdate', handleTimeUpdateNative);
+      element.removeEventListener('pause', handlePauseNative);
+    };
+  }, []);
 
   useEffect(() => {
     const reassertPlayback = () => {
@@ -524,7 +554,41 @@ export default function App() {
     return randomBetween(currentSettings.shuffleMinGapSec, currentSettings.shuffleMaxGapSec, currentIndexRef.current + 11) * 1000;
   }
 
+  function onAudioPause() {
+    if (trackTransitionRef.current) {
+      return;
+    }
+
+    const element = audioRef.current;
+    if (element && element.ended) {
+      return;
+    }
+
+    if (
+      element &&
+      Number.isFinite(element.duration) &&
+      element.duration > 0 &&
+      element.currentTime >= element.duration - 0.05
+    ) {
+      return;
+    }
+
+    if (currentPhaseRef.current === 'gap') {
+      return;
+    }
+
+    if (statusRef.current === 'playing') {
+      updateStatus('paused');
+    }
+  }
+
   function onAudioEnded() {
+    const now = Date.now();
+    if (now - lastAdvanceAtRef.current < 250) {
+      return;
+    }
+    lastAdvanceAtRef.current = now;
+
     clearTrackAdvanceTimer();
     const currentTrack = currentQueueRef.current[currentIndexRef.current];
     if (!currentTrack) {
@@ -763,33 +827,7 @@ export default function App() {
           console.error(msg, 'src:', audioRef.current?.src);
           setStatusMessage(msg);
         }}
-        onPause={() => {
-          if (trackTransitionRef.current) {
-            return;
-          }
-
-          const element = audioRef.current;
-          if (element && element.ended) {
-            return;
-          }
-
-          if (
-            element &&
-            Number.isFinite(element.duration) &&
-            element.duration > 0 &&
-            element.currentTime >= element.duration - 0.05
-          ) {
-            return;
-          }
-
-          if (currentPhaseRef.current === 'gap') {
-            return;
-          }
-
-          if (statusRef.current === 'playing') {
-            updateStatus('paused');
-          }
-        }}
+        onPause={onAudioPause}
       />
 
       {/* Hidden audio element for silence during gaps - keeps AudioContext alive on iOS */}
