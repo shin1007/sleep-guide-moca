@@ -11,18 +11,78 @@ export function createWhiteNoiseController() {
   let context: AudioContext | null = null;
   let source: AudioBufferSourceNode | null = null;
   let gainNode: GainNode | null = null;
+  let outputNode: AudioNode | null = null;
+  let bridgeDestination: MediaStreamAudioDestinationNode | null = null;
+  let bridgeAudio: HTMLAudioElement | null = null;
   let currentType: NoiseType | null = null;
   let pendingVolume = 0.18;
   let isStarted = false;
 
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function ensureOutputTarget() {
+    if (!context) {
+      return;
+    }
+
+    if (outputNode) {
+      return;
+    }
+
+    if (isIOS) {
+      bridgeDestination = context.createMediaStreamDestination();
+      outputNode = bridgeDestination;
+
+      bridgeAudio = new Audio();
+      bridgeAudio.srcObject = bridgeDestination.stream;
+      bridgeAudio.loop = true;
+      bridgeAudio.muted = false;
+      bridgeAudio.volume = 1;
+      bridgeAudio.setAttribute('playsinline', '');
+      bridgeAudio.setAttribute('webkit-playsinline', '');
+      bridgeAudio.setAttribute('aria-hidden', 'true');
+      bridgeAudio.style.position = 'fixed';
+      bridgeAudio.style.left = '0';
+      bridgeAudio.style.top = '0';
+      bridgeAudio.style.width = '1px';
+      bridgeAudio.style.height = '1px';
+      bridgeAudio.style.opacity = '0.001';
+      bridgeAudio.style.pointerEvents = 'none';
+
+      if (document.body && !bridgeAudio.parentElement) {
+        document.body.appendChild(bridgeAudio);
+      }
+      return;
+    }
+
+    outputNode = context.destination;
+  }
+
+  async function ensureBridgePlayback() {
+    if (!bridgeAudio) {
+      return;
+    }
+
+    try {
+      await bridgeAudio.play();
+    } catch {
+      // iOS may still reject play() outside a gesture; retry on next start.
+    }
+  }
+
   async function ensureStarted(volume: number, type: NoiseType, timeConstant?: number) {
     if (!context) {
       context = new AudioContext();
+      ensureOutputTarget();
     }
 
     if (context.state === 'suspended') {
       await context.resume();
     }
+
+    await ensureBridgePlayback();
 
     // If already running with the correct type, just adjust volume
     if (isStarted && currentType === type) {
@@ -59,7 +119,10 @@ export function createWhiteNoiseController() {
     if (!gainNode) {
       gainNode = context.createGain();
       gainNode.gain.value = 0;
-      gainNode.connect(context.destination);
+      ensureOutputTarget();
+      if (outputNode) {
+        gainNode.connect(outputNode);
+      }
     }
 
     source = context.createBufferSource();
@@ -129,6 +192,20 @@ export function createWhiteNoiseController() {
         gainNode.disconnect();
       }
 
+      if (bridgeAudio) {
+        try {
+          bridgeAudio.pause();
+          bridgeAudio.srcObject = null;
+          bridgeAudio.remove();
+        } catch {}
+      }
+
+      if (bridgeDestination) {
+        try {
+          bridgeDestination.disconnect();
+        } catch {}
+      }
+
       if (context && context.state !== 'closed') {
         void context.close();
       }
@@ -136,6 +213,9 @@ export function createWhiteNoiseController() {
       context = null;
       source = null;
       gainNode = null;
+      outputNode = null;
+      bridgeDestination = null;
+      bridgeAudio = null;
       currentType = null;
     },
     get pendingVolume() {
