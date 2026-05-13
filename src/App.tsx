@@ -102,8 +102,47 @@ export default function App() {
 
       syncNoisePlayback();
 
-      if (audioRef.current && audioRef.current.paused) {
-        void audioRef.current.play().catch(() => {});
+      if (currentPhaseRef.current === 'gap') {
+        const elapsed = Math.max(0, Date.now() - gapStartedAtRef.current);
+        const remaining = Math.max(0, currentGapRemainingRef.current - elapsed);
+        currentGapRemainingRef.current = remaining;
+        setGapRemainingMs(remaining);
+
+        if (gapTimerRef.current) {
+          window.clearTimeout(gapTimerRef.current);
+          gapTimerRef.current = null;
+        }
+
+        if (remaining <= 0) {
+          advanceQueue();
+          return;
+        }
+
+        gapStartedAtRef.current = Date.now();
+        gapTimerRef.current = window.setTimeout(() => {
+          gapTimerRef.current = null;
+          advanceQueue();
+        }, remaining);
+      }
+
+      if (audioRef.current) {
+        const duration = audioRef.current.duration;
+        if (
+          currentPhaseRef.current === 'track' &&
+          (audioRef.current.ended ||
+            (Number.isFinite(duration) && duration > 0 && audioRef.current.currentTime >= duration - 0.05))
+        ) {
+          onAudioEnded();
+          return;
+        }
+
+        if (audioRef.current.paused) {
+          void audioRef.current.play().then(() => {
+            armTrackAdvanceTimer();
+          }).catch(() => {});
+        } else if (currentPhaseRef.current === 'track') {
+          armTrackAdvanceTimer();
+        }
       }
 
       if (silenceAudioRef.current) {
@@ -381,8 +420,10 @@ export default function App() {
         audioRef.current.volume = 1;
         setVoiceVolume(0);
         audioRef.current.pause();
-        audioRef.current.src = track.audioUrl;
-        audioRef.current.load(); // Force reset of audio element
+        if (audioRef.current.src !== new URL(track.audioUrl, window.location.href).toString()) {
+          audioRef.current.src = track.audioUrl;
+          audioRef.current.load(); // reset only when source actually changed
+        }
         if (resumeTime > 0) {
           audioRef.current.currentTime = resumeTime;
         }
