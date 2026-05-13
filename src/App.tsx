@@ -126,7 +126,7 @@ export default function App() {
         } catch {}
       }
     }
-  }, [status]);
+  }, [status, settings.masterVolume, settings.noiseVolume, settings.noiseType]);
 
   function updateSettings(nextSettings: SleepSettings) {
     settingsRef.current = nextSettings;

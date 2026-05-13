@@ -13,6 +13,7 @@ export function createWhiteNoiseController() {
   let gainNode: GainNode | null = null;
   let currentType: NoiseType | null = null;
   let pendingVolume = 0.18;
+  let isStarted = false;
 
   async function ensureStarted(volume: number, type: NoiseType, timeConstant?: number) {
     pendingVolume = volume;
@@ -25,49 +26,58 @@ export function createWhiteNoiseController() {
       await context.resume();
     }
 
-    // If already running with a different type, stop first
-    if (source && currentType !== type) {
+    // If already running with the correct type, just adjust volume
+    if (isStarted && currentType === type) {
+      if (gainNode && volume !== pendingVolume) {
+        const tc = timeConstant ?? 0.02;
+        gainNode.gain.setTargetAtTime(volume, context.currentTime, tc);
+      }
+      return;
+    }
+
+    // If type changed, disconnect and restart
+    if (source) {
       try {
         source.stop();
+        source.disconnect();
       } catch {}
-      source.disconnect();
       source = null;
+      isStarted = false;
     }
 
-    let isFreshStart = false;
-    if (!source) {
-      if (volume < 0.001) {
-        return;
-      }
+    if (volume < 0.001) {
+      return;
+    }
 
-      isFreshStart = true;
-      currentType = type;
-      const buffer = buildNoiseBuffer(context, 2, type);
-      const filter = context.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 400; // Lowered slightly for richer pink/brown
+    currentType = type;
+    const buffer = buildNoiseBuffer(context, 2, type);
+    const filter = context.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 400;
 
-      if (!gainNode) {
-        gainNode = context.createGain();
-        gainNode.gain.value = 0;
-        gainNode.connect(context.destination);
-      }
+    if (!gainNode) {
+      gainNode = context.createGain();
+      gainNode.gain.value = 0;
+      gainNode.connect(context.destination);
+    }
 
-      source = context.createBufferSource();
-      source.buffer = buffer;
-      source.loop = true;
-      source.connect(filter);
-      filter.connect(gainNode);
+    source = context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(filter);
+    filter.connect(gainNode);
+    
+    try {
       source.start();
+      isStarted = true;
+    } catch (err) {
+      console.warn('Failed to start noise source:', err);
+      isStarted = false;
+      return;
     }
 
-    if (gainNode) {
-      if (isFreshStart) {
-        gainNode.gain.value = 0;
-      }
-      const tc = timeConstant ?? (isFreshStart ? 0.8 : 0.02);
-      gainNode.gain.setTargetAtTime(volume, context.currentTime, tc);
-    }
+    const tc = 0.8; // Fresh start fade-in
+    gainNode.gain.setTargetAtTime(volume, context.currentTime, tc);
   }
 
   return {
@@ -76,28 +86,32 @@ export function createWhiteNoiseController() {
     },
     setVolume(volume: number, timeConstant = 0.02) {
       pendingVolume = volume;
-      if (context && gainNode) {
-        gainNode.gain.setTargetAtTime(volume, context.currentTime, timeConstant);
+      if (context && gainNode && isStarted) {
+        try {
+          gainNode.gain.setTargetAtTime(volume, context.currentTime, timeConstant);
+        } catch (err) {
+          console.warn('Failed to set noise volume:', err);
+        }
       }
     },
     stop() {
       // Stop and disconnect source, but keep context for reuse (especially on iOS)
-      if (source) {
+      if (source && isStarted) {
         try {
           source.stop();
+          source.disconnect();
         } catch {}
-        source.disconnect();
       }
 
       // Mute gain node instead of disconnecting to preserve the audio chain
-      if (gainNode) {
+      if (gainNode && context) {
         try {
-          gainNode.gain.setTargetAtTime(0, context?.currentTime ?? 0, 0.02);
+          gainNode.gain.setTargetAtTime(0, context.currentTime, 0.02);
         } catch {}
-        // Don't disconnect - keep the chain intact for iOS compatibility
       }
 
       source = null;
+      isStarted = false;
       currentType = null;
       // Keep context and gainNode for reuse on next start()
     },
