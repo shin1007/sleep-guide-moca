@@ -18,6 +18,9 @@ type GapTimer = ReturnType<typeof window.setTimeout> | null;
 export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const silenceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceContextRef = useRef<AudioContext | null>(null);
+  const voiceSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const voiceGainRef = useRef<GainNode | null>(null);
   const noiseControllerRef = useRef<ReturnType<typeof createWhiteNoiseController> | null>(null);
   const gapTimerRef = useRef<GapTimer>(null);
   const warmupAbortRef = useRef<AbortController | null>(null);
@@ -53,6 +56,48 @@ export default function App() {
     noiseControllerRef.current = createWhiteNoiseController();
     return () => {
       noiseControllerRef.current?.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = audioRef.current;
+    if (!element || voiceSourceRef.current) {
+      return;
+    }
+
+    const context = voiceContextRef.current ?? new AudioContext();
+    voiceContextRef.current = context;
+
+    if (!voiceGainRef.current) {
+      voiceGainRef.current = context.createGain();
+      voiceGainRef.current.gain.value = clamp(settingsRef.current.masterVolume * settingsRef.current.voiceVolume);
+      voiceGainRef.current.connect(context.destination);
+    }
+
+    try {
+      voiceSourceRef.current = context.createMediaElementSource(element);
+      voiceSourceRef.current.connect(voiceGainRef.current);
+      element.volume = 1;
+    } catch (error) {
+      console.warn('Failed to initialize voice audio graph:', error);
+    }
+
+    return () => {
+      try {
+        voiceSourceRef.current?.disconnect();
+      } catch {}
+
+      try {
+        voiceGainRef.current?.disconnect();
+      } catch {}
+
+      if (voiceContextRef.current && voiceContextRef.current.state !== 'closed') {
+        void voiceContextRef.current.close();
+      }
+
+      voiceSourceRef.current = null;
+      voiceGainRef.current = null;
+      voiceContextRef.current = null;
     };
   }, []);
 
@@ -95,13 +140,12 @@ export default function App() {
 
   // Apply volume changes immediately during playback
   useEffect(() => {
-    if (status !== 'playing' || !audioRef.current || trackTransitionRef.current) {
+    if (status !== 'playing' || trackTransitionRef.current) {
       return;
     }
 
-    // Apply voice volume to audio element
-    audioRef.current.volume = clamp(settings.masterVolume * settings.voiceVolume);
-  }, [settings.masterVolume, settings.voiceVolume, settings.noiseVolume, settings.noiseType, status]);
+    setVoiceVolume(clamp(settings.masterVolume * settings.voiceVolume));
+  }, [settings.masterVolume, settings.voiceVolume, status]);
 
   useEffect(() => {
     if (status === 'playing') {
@@ -302,7 +346,8 @@ export default function App() {
     // prepare audio with volume 0 to avoid click
     if (audioRef.current) {
       try {
-        audioRef.current.volume = 0;
+        audioRef.current.volume = 1;
+        setVoiceVolume(0);
         audioRef.current.pause();
         audioRef.current.src = track.audioUrl;
         audioRef.current.load(); // Force reset of audio element
@@ -345,6 +390,9 @@ export default function App() {
     }
 
     const nextDelay = Math.max(0, delayMs);
+    if (statusRef.current !== 'playing') {
+      updateStatus('playing');
+    }
     currentPhaseRef.current = 'gap';
     setPhase('gap');
     setGapRemainingMs(nextDelay);
@@ -515,6 +563,56 @@ export default function App() {
     return Math.min(1, Math.max(0, value));
   }
 
+  function ensureVoiceAudioGraph() {
+    const element = audioRef.current;
+    if (!element) {
+      return null;
+    }
+
+    const context = voiceContextRef.current ?? new AudioContext();
+    voiceContextRef.current = context;
+
+    if (!voiceGainRef.current) {
+      voiceGainRef.current = context.createGain();
+      voiceGainRef.current.gain.value = clamp(settingsRef.current.masterVolume * settingsRef.current.voiceVolume);
+      voiceGainRef.current.connect(context.destination);
+    }
+
+    if (!voiceSourceRef.current) {
+      try {
+        voiceSourceRef.current = context.createMediaElementSource(element);
+        voiceSourceRef.current.connect(voiceGainRef.current);
+      } catch (error) {
+        console.warn('Failed to connect voice audio graph:', error);
+      }
+    }
+
+    return context;
+  }
+
+  function setVoiceVolume(volume: number, timeConstant = 0.02) {
+    const clamped = clamp(volume);
+    const context = ensureVoiceAudioGraph();
+    const gainNode = voiceGainRef.current;
+
+    if (context && gainNode) {
+      if (context.state === 'suspended') {
+        void context.resume().catch(() => {});
+      }
+
+      try {
+        gainNode.gain.setTargetAtTime(clamped, context.currentTime, timeConstant);
+      } catch {
+        gainNode.gain.value = clamped;
+      }
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.volume = clamped;
+    }
+  }
+
   function syncNoisePlayback() {
     const noiseVol = clamp(settingsRef.current.masterVolume * settingsRef.current.noiseVolume * 0.25);
     if (!noiseControllerRef.current) return;
@@ -532,19 +630,17 @@ export default function App() {
   }
 
   async function fadeAudioTo(target: number, duration = 200) {
-    const el = audioRef.current;
-    if (!el) return;
-    const start = el.volume;
+    const start = voiceGainRef.current ? voiceGainRef.current.gain.value : audioRef.current?.volume ?? 1;
     const delta = target - start;
     if (duration <= 0) {
-      el.volume = clamp(target);
+      setVoiceVolume(clamp(target));
       return;
     }
 
     const steps = Math.max(4, Math.floor(duration / 16));
     for (let i = 1; i <= steps; i += 1) {
       const v = start + (delta * i) / steps;
-      el.volume = clamp(v);
+      setVoiceVolume(clamp(v));
       // small await to allow browser to apply
       // eslint-disable-next-line no-await-in-loop
       await sleep(Math.floor(duration / steps));
@@ -609,6 +705,15 @@ export default function App() {
 
           const element = audioRef.current;
           if (element && element.ended) {
+            return;
+          }
+
+          if (
+            element &&
+            Number.isFinite(element.duration) &&
+            element.duration > 0 &&
+            element.currentTime >= element.duration - 0.05
+          ) {
             return;
           }
 
