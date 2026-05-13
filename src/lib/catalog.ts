@@ -141,7 +141,15 @@ export function getStageHue(stage: StageId) {
 }
 
 export function createQueue(settings: SleepSettings) {
-  const pmr = sleepLibrary.stages.pmr.map((track) => ({ ...track, delayAfterMs: 350 }));
+  const pmr = sleepLibrary.stages.pmr.map((track) => {
+    let delayAfterMs = 350;
+    if ([6, 11, 14, 17, 21, 24].includes(track.order)) {
+      delayAfterMs = 5000;
+    } else if ([9, 13, 16, 19, 23, 26, 29].includes(track.order)) {
+      delayAfterMs = 10000;
+    }
+    return { ...track, delayAfterMs };
+  });
   
   // Split breathing into intro (0-3) and steps (4-6)
   const breathingIntro = sleepLibrary.stages.breathing
