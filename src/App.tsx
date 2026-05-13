@@ -18,9 +18,6 @@ type GapTimer = ReturnType<typeof window.setTimeout> | null;
 export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const silenceAudioRef = useRef<HTMLAudioElement | null>(null);
-  const voiceContextRef = useRef<AudioContext | null>(null);
-  const voiceSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const voiceGainRef = useRef<GainNode | null>(null);
   const noiseControllerRef = useRef<ReturnType<typeof createWhiteNoiseController> | null>(null);
   const gapTimerRef = useRef<GapTimer>(null);
   const trackAdvanceTimerRef = useRef<GapTimer>(null);
@@ -57,48 +54,6 @@ export default function App() {
     noiseControllerRef.current = createWhiteNoiseController();
     return () => {
       noiseControllerRef.current?.destroy();
-    };
-  }, []);
-
-  useEffect(() => {
-    const element = audioRef.current;
-    if (!element || voiceSourceRef.current) {
-      return;
-    }
-
-    const context = voiceContextRef.current ?? new AudioContext();
-    voiceContextRef.current = context;
-
-    if (!voiceGainRef.current) {
-      voiceGainRef.current = context.createGain();
-      voiceGainRef.current.gain.value = clamp(settingsRef.current.masterVolume * settingsRef.current.voiceVolume);
-      voiceGainRef.current.connect(context.destination);
-    }
-
-    try {
-      voiceSourceRef.current = context.createMediaElementSource(element);
-      voiceSourceRef.current.connect(voiceGainRef.current);
-      element.volume = 1;
-    } catch (error) {
-      console.warn('Failed to initialize voice audio graph:', error);
-    }
-
-    return () => {
-      try {
-        voiceSourceRef.current?.disconnect();
-      } catch {}
-
-      try {
-        voiceGainRef.current?.disconnect();
-      } catch {}
-
-      if (voiceContextRef.current && voiceContextRef.current.state !== 'closed') {
-        void voiceContextRef.current.close();
-      }
-
-      voiceSourceRef.current = null;
-      voiceGainRef.current = null;
-      voiceContextRef.current = null;
     };
   }, []);
 
@@ -656,52 +611,18 @@ export default function App() {
   }
 
   function ensureVoiceAudioGraph() {
-    const element = audioRef.current;
-    if (!element) {
-      return null;
-    }
-
-    const context = voiceContextRef.current ?? new AudioContext();
-    voiceContextRef.current = context;
-
-    if (!voiceGainRef.current) {
-      voiceGainRef.current = context.createGain();
-      voiceGainRef.current.gain.value = clamp(settingsRef.current.masterVolume * settingsRef.current.voiceVolume);
-      voiceGainRef.current.connect(context.destination);
-    }
-
-    if (!voiceSourceRef.current) {
-      try {
-        voiceSourceRef.current = context.createMediaElementSource(element);
-        voiceSourceRef.current.connect(voiceGainRef.current);
-      } catch (error) {
-        console.warn('Failed to connect voice audio graph:', error);
-      }
-    }
-
-    return context;
+    return audioRef.current;
   }
 
   function setVoiceVolume(volume: number, timeConstant = 0.02) {
     const clamped = clamp(volume);
-    const context = ensureVoiceAudioGraph();
-    const gainNode = voiceGainRef.current;
-
-    if (context && gainNode) {
-      if (context.state === 'suspended') {
-        void context.resume().catch(() => {});
-      }
-
+    const element = ensureVoiceAudioGraph();
+    if (element) {
       try {
-        gainNode.gain.setTargetAtTime(clamped, context.currentTime, timeConstant);
+        element.volume = clamped;
       } catch {
-        gainNode.gain.value = clamped;
+        // ignore
       }
-      return;
-    }
-
-    if (audioRef.current) {
-      audioRef.current.volume = clamped;
     }
   }
 
@@ -722,7 +643,7 @@ export default function App() {
   }
 
   async function fadeAudioTo(target: number, duration = 200) {
-    const start = voiceGainRef.current ? voiceGainRef.current.gain.value : audioRef.current?.volume ?? 1;
+    const start = audioRef.current?.volume ?? 1;
     const delta = target - start;
     if (duration <= 0) {
       setVoiceVolume(clamp(target));
