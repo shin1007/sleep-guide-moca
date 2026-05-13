@@ -138,6 +138,46 @@ export default function App() {
     };
   }, [timerEndsAt, status]);
 
+  useEffect(() => {
+    const reassertPlayback = () => {
+      if (statusRef.current !== 'playing') {
+        return;
+      }
+
+      syncNoisePlayback();
+
+      if (audioRef.current && audioRef.current.paused) {
+        void audioRef.current.play().catch(() => {});
+      }
+
+      if (silenceAudioRef.current) {
+        silenceAudioRef.current.muted = true;
+        silenceAudioRef.current.volume = 0;
+        silenceAudioRef.current.loop = true;
+        silenceAudioRef.current.src = createLoopableSilenceUrl();
+        void silenceAudioRef.current.play().catch(() => {});
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        reassertPlayback();
+      }
+    };
+
+    const onPageShow = () => {
+      reassertPlayback();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pageshow', onPageShow);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
+
   // Apply volume changes immediately during playback
   useEffect(() => {
     if (status !== 'playing' || trackTransitionRef.current) {
@@ -153,6 +193,7 @@ export default function App() {
       // Keep silence playing to maintain AudioContext on iOS
       if (silenceAudioRef.current) {
         try {
+          silenceAudioRef.current.muted = true;
           silenceAudioRef.current.volume = 0;
           silenceAudioRef.current.src = createLoopableSilenceUrl();
           silenceAudioRef.current.loop = true;
@@ -732,7 +773,18 @@ export default function App() {
         ref={silenceAudioRef}
         preload="auto"
         playsInline
-        style={{ display: 'none' }}
+        muted
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+          left: '-9999px',
+          top: 'auto',
+        }}
       />
 
       <section className="hero-card">
