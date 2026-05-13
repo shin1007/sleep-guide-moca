@@ -288,13 +288,8 @@ export default function App() {
 
     console.log(`Starting track: ${track.speechContent}, volume: ${Math.round(voiceVol * 100)}%, src: ${track.audioUrl}`);
 
-    const noiseVol = clamp(settings.masterVolume * settings.noiseVolume * 0.25);
-    if (noiseVol > 0.001) {
-      // Don't await here, and relying on noise.ts to not restart if already playing
-      void noiseControllerRef.current?.start(noiseVol, settings.noiseType);
-    } else {
-      noiseControllerRef.current?.setVolume(0);
-    }
+    // Relies on useEffect to manage noise based on status and settings.
+    // Noise is started/stopped by pause/continue/stopPlayback functions and useEffect hook.
 
     try {
       await audioRef.current.play();
