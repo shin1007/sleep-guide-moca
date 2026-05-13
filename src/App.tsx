@@ -166,6 +166,13 @@ export default function App() {
     setStatusMessage('再生を開始しました。');
 
     void startCurrentTrack(nextQueue[0]);
+
+    // Explicitly start noise when playback begins
+    const noiseVol = clamp(settings.masterVolume * settings.noiseVolume * 0.25);
+    if (noiseVol > 0.001 && noiseControllerRef.current) {
+      void noiseControllerRef.current.start(noiseVol, settings.noiseType);
+    }
+
     scheduleSessionSave();
   }
 
@@ -705,6 +712,10 @@ function WatsonIcon() {
         {/* Cat Ears */}
         <path d="M6 8L4 5L8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M18 8L20 5L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
+  );
+}d" strokeLinejoin="round"/>
       </svg>
     </div>
   );
