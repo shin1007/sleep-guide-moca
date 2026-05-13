@@ -23,6 +23,7 @@ export default function App() {
   const voiceGainRef = useRef<GainNode | null>(null);
   const noiseControllerRef = useRef<ReturnType<typeof createWhiteNoiseController> | null>(null);
   const gapTimerRef = useRef<GapTimer>(null);
+  const trackAdvanceTimerRef = useRef<GapTimer>(null);
   const warmupAbortRef = useRef<AbortController | null>(null);
   const trackTransitionRef = useRef(false);
   const settingsRef = useRef<SleepSettings>(loadSettings());
@@ -226,6 +227,38 @@ export default function App() {
     saveSession(snapshot);
   }
 
+  function clearTrackAdvanceTimer() {
+    if (trackAdvanceTimerRef.current) {
+      window.clearTimeout(trackAdvanceTimerRef.current);
+      trackAdvanceTimerRef.current = null;
+    }
+  }
+
+  function armTrackAdvanceTimer() {
+    clearTrackAdvanceTimer();
+
+    const element = audioRef.current;
+    if (!element || currentPhaseRef.current !== 'track' || statusRef.current !== 'playing') {
+      return;
+    }
+
+    if (!Number.isFinite(element.duration) || element.duration <= 0) {
+      return;
+    }
+
+    const remainingSeconds = Math.max(0, element.duration - element.currentTime);
+    if (remainingSeconds <= 0) {
+      return;
+    }
+
+    trackAdvanceTimerRef.current = window.setTimeout(() => {
+      trackAdvanceTimerRef.current = null;
+      if (statusRef.current === 'playing' && currentPhaseRef.current === 'track') {
+        onAudioEnded();
+      }
+    }, remainingSeconds * 1000 + 250);
+  }
+
   function captureSession(): PlaybackSession | null {
     if (!currentQueueRef.current.length) {
       return null;
@@ -300,6 +333,7 @@ export default function App() {
       window.clearTimeout(gapTimerRef.current);
       gapTimerRef.current = null;
     }
+    clearTrackAdvanceTimer();
 
     updateStatus('paused');
     // fade down audio and noise to avoid clicks
@@ -329,6 +363,7 @@ export default function App() {
       window.clearTimeout(gapTimerRef.current);
       gapTimerRef.current = null;
     }
+    clearTrackAdvanceTimer();
 
     // fade out audio then remove src
     if (audioRef.current) {
@@ -382,6 +417,7 @@ export default function App() {
       window.clearTimeout(gapTimerRef.current);
       gapTimerRef.current = null;
     }
+    clearTrackAdvanceTimer();
 
     trackTransitionRef.current = true;
     // prepare audio with volume 0 to avoid click
@@ -416,6 +452,7 @@ export default function App() {
       setCurrentTime(audioRef.current.currentTime);
       currentTimeRef.current = audioRef.current.currentTime;
       setStatusMessage(`${getStageLabel(track.stage)} を再生中です。`);
+      armTrackAdvanceTimer();
     } catch (error) {
       console.error('Play error:', error);
       updateStatus('paused');
@@ -429,6 +466,7 @@ export default function App() {
     if (gapTimerRef.current) {
       window.clearTimeout(gapTimerRef.current);
     }
+    clearTrackAdvanceTimer();
 
     const nextDelay = Math.max(0, delayMs);
     if (statusRef.current !== 'playing') {
@@ -482,6 +520,7 @@ export default function App() {
   }
 
   function onAudioEnded() {
+    clearTrackAdvanceTimer();
     const currentTrack = currentQueueRef.current[currentIndexRef.current];
     if (!currentTrack) {
       stopPlayback();
@@ -502,6 +541,18 @@ export default function App() {
     const nextTime = audioRef.current?.currentTime ?? 0;
     currentTimeRef.current = nextTime;
     setCurrentTime(nextTime);
+
+    if (currentPhaseRef.current === 'track' && audioRef.current) {
+      const duration = audioRef.current.duration;
+      if (Number.isFinite(duration) && duration > 0) {
+        if (nextTime >= duration - 0.05) {
+          onAudioEnded();
+          return;
+        }
+
+        armTrackAdvanceTimer();
+      }
+    }
   }
 
   function adjustSettings(next: Partial<SleepSettings>) {
@@ -568,7 +619,7 @@ export default function App() {
     const label = track ? `${getStageLabel(stage)} / ${track.speechContent}` : '待機中';
     const subtitle = currentPhaseValue === 'gap' ? '次の工程を準備中' : currentStatus === 'playing' ? '再生中' : '停止中';
     navigator.mediaSession.metadata = new window.MediaMetadata({
-      title: '宮舞モカとおやすみ',
+      title: label,
       artist: '宮舞モカ',
       album: '宮舞モカとおやすみ',
       artwork: [
@@ -731,6 +782,8 @@ export default function App() {
         ref={audioRef}
         preload="auto"
         playsInline
+        onLoadedMetadata={armTrackAdvanceTimer}
+        onDurationChange={armTrackAdvanceTimer}
         onEnded={onAudioEnded}
         onTimeUpdate={onTimeUpdate}
         onError={(e) => {
@@ -791,7 +844,10 @@ export default function App() {
         <div className="hero-header">
           <div className="title-group">
             <WatsonIcon />
-            <h1>宮舞モカとおやすみ</h1>
+            <div>
+              <h1>宮舞モカとおやすみ</h1>
+              <p className="hero-current-speech">{activeTrack?.speechContent ?? '待機中です。'}</p>
+            </div>
           </div>
           <div className="hero-buttons">
             <button className="primary" onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}>
