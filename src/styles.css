@@ -135,7 +135,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: 30%;
+  width: 70%;
   min-width: 58px;
   max-width: 92px;
   justify-self: center;
@@ -451,7 +451,7 @@ input[type="number"]:focus, select:focus {
   }
   
   .hero-buttons {
-    width: 30%;
+    width: 70%;
     min-width: 52px;
     max-width: 68px;
     gap: 10px;
