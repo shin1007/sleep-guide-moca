@@ -136,8 +136,8 @@ select {
   flex-direction: column;
   gap: 14px;
   width: 70%;
-  min-width: 58px;
-  max-width: 92px;
+  min-width: 72px;
+  max-width: 128px;
   justify-self: center;
   align-self: end;
 }
@@ -145,7 +145,7 @@ select {
 .hero-buttons button.icon {
   padding: 0;
   width: 100%;
-  height: clamp(128px, 17vw, 156px);
+  height: clamp(138px, 19vw, 182px);
   flex: 0 0 auto;
   border-radius: 12px;
   font-size: 0;
@@ -452,13 +452,13 @@ input[type="number"]:focus, select:focus {
   
   .hero-buttons {
     width: 70%;
-    min-width: 52px;
-    max-width: 68px;
+    min-width: 64px;
+    max-width: 92px;
     gap: 10px;
   }
 
   .hero-buttons button.icon {
-    height: 112px;
+    height: 124px;
   }
 
   .character-section {
