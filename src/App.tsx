@@ -858,11 +858,19 @@ export default function App() {
             </div>
           </div>
           <div className="hero-buttons">
-            <button className="primary" onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}>
-              {status === 'paused' ? '再開' : '再生'}
+            <button
+              className="primary icon"
+              onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}
+              aria-label={status === 'playing' ? '一時停止' : status === 'paused' ? '再開' : '再生'}
+            >
+              {status === 'playing' ? <PauseIcon /> : <PlayIcon />}
             </button>
-            <button className="secondary" onClick={() => stopPlayback('停止しました。')}>
-              停止
+            <button
+              className="secondary icon"
+              onClick={() => stopPlayback('停止しました。')}
+              aria-label="停止"
+            >
+              <StopIcon />
             </button>
           </div>
         </div>
@@ -987,4 +995,29 @@ function WatsonIcon() {
       </svg>
     </div>
   );
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M5 3.868v16.264A1 1 0 0 0 6.57 21.2l12.86-8.664A1 1 0 0 0 19.43 11.46L6.57 2.796A1 1 0 0 0 5 3.868z" fill="currentColor"/>
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="5" y="4" width="4" height="16" rx="1" fill="currentColor" />
+      <rect x="15" y="4" width="4" height="16" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
 }
