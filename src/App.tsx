@@ -11,6 +11,7 @@ import {
 import { createWhiteNoiseController } from './lib/noise';
 import { createLoopableSilenceUrl } from './lib/silence';
 import { loadSettings, saveSession, saveSettings, type PlaybackSession } from './lib/storage';
+import { CharacterDisplay } from './components/characters/CharacterDisplay';
 
 type PlaybackStatus = 'idle' | 'playing' | 'paused';
 type GapTimer = ReturnType<typeof window.setTimeout> | null;
@@ -857,7 +858,11 @@ export default function App() {
         
         <div className="character-section">
           <div className="character-wrapper">
-            <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
+            <CharacterDisplay 
+              stage={activeTrack?.stage ?? 'pmr'}
+              subStage={Math.min(queue.length, currentIndex)}
+              isPlaying={status === 'playing'}
+            />
           </div>
           <div className="hero-buttons">
             <button
