@@ -138,8 +138,9 @@ select {
   /* 余白を押し広げないよう、操作ボタン列は固定サイズにする */
   flex: 0 0 60px;
   width: 60px;
-  height: 280px;
+  height: clamp(220px, 32vw, 320px);
   min-width: 60px;
+  align-self: flex-end;
 }
 
 .hero-buttons button.icon {
@@ -227,25 +228,26 @@ button.secondary:hover {
 
 .character-section {
   display: flex;
-  align-items: stretch;
-  gap: 20px;
+  align-items: flex-end;
+  gap: 14px;
   width: 100%;
 }
 
 .character-wrapper {
   flex-shrink: 0;
-  width: 220px;
+  width: clamp(220px, 29vw, 320px);
   height: auto;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   overflow: hidden;
 }
 
 .character-image {
   width: 100%;
+  max-height: min(52vh, 420px);
   height: auto;
   object-fit: contain;
-  object-position: center left;
+  object-position: center bottom;
   mix-blend-mode: screen;
   display: block;
 }
@@ -446,11 +448,21 @@ input[type="number"]:focus, select:focus {
   }
   
   .hero-buttons {
-    width: 100%;
+    width: 56px;
+    min-width: 56px;
+    height: 220px;
   }
   
   .hero-buttons button {
     flex: 1;
+  }
+
+  .character-section {
+    gap: 10px;
+  }
+
+  .character-wrapper {
+    width: min(56vw, 240px);
   }
   
   .range-grid {
