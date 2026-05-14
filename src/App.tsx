@@ -857,13 +857,6 @@ export default function App() {
         </div>
         
         <div className="character-section">
-          <div className="character-wrapper">
-            <CharacterDisplay 
-              stage={activeTrack?.stage ?? 'pmr'}
-              subStage={Math.min(queue.length, currentIndex)}
-              isPlaying={status === 'playing'}
-            />
-          </div>
           <div className="hero-buttons">
             <button
               className="primary icon"
@@ -879,6 +872,13 @@ export default function App() {
             >
               <StopIcon />
             </button>
+          </div>
+          <div className="character-wrapper">
+            <CharacterDisplay 
+              stage={activeTrack?.stage ?? 'pmr'}
+              subStage={Math.min(queue.length, currentIndex)}
+              isPlaying={status === 'playing'}
+            />
           </div>
         </div>
       </section>
