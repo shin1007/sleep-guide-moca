@@ -4,5 +4,12 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"/^python --version$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		}
+	}
 }
