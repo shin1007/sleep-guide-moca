@@ -135,8 +135,9 @@ select {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: clamp(64px, 7vw, 78px);
-  min-width: 64px;
+  width: 30%;
+  min-width: 58px;
+  max-width: 92px;
   justify-self: center;
   align-self: end;
 }
@@ -450,8 +451,9 @@ input[type="number"]:focus, select:focus {
   }
   
   .hero-buttons {
-    width: 58px;
-    min-width: 58px;
+    width: 30%;
+    min-width: 52px;
+    max-width: 68px;
     gap: 10px;
   }
 
