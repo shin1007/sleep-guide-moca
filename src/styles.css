@@ -135,7 +135,10 @@ select {
   display: flex;
   flex-direction: column;
   gap: 0;
-  flex: 1;
+  /* 余白を押し広げないよう、操作ボタン列は固定サイズにする */
+  flex: 0 0 60px;
+  width: 60px;
+  height: 280px;
   min-width: 60px;
 }
 
