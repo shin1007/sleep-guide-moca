@@ -851,34 +851,33 @@ export default function App() {
 
       <section className="hero-card">
         <div className="hero-header">
-          <div className="title-group">
-            <WatsonIcon />
-            <div>
-              <h1>宮舞モカとおやすみ</h1>
-            </div>
-          </div>
-          <div className="hero-buttons">
-            <button
-              className="primary icon"
-              onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}
-              aria-label={status === 'playing' ? '一時停止' : status === 'paused' ? '再開' : '再生'}
-            >
-              {status === 'playing' ? <PauseIcon /> : <PlayIcon />}
-            </button>
-            <button
-              className="secondary icon"
-              onClick={() => stopPlayback('停止しました。')}
-              aria-label="停止"
-            >
-              <StopIcon />
-            </button>
-          </div>
+          <h1>宮舞モカとおやすみ</h1>
         </div>
 
         <div className="status-panel">
-          <div className="status-content">
+          <div className="speech-section">
             <div className="stage-label">{activeTrack ? getStageLabel(activeTrack.stage) : '待機中...'}</div>
             <div className="speech-text">{activeTrack?.speechContent ?? '漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます'}</div>
+          </div>
+          
+          <div className="character-section">
+            <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
+            <div className="hero-buttons">
+              <button
+                className="primary icon"
+                onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}
+                aria-label={status === 'playing' ? '一時停止' : status === 'paused' ? '再開' : '再生'}
+              >
+                {status === 'playing' ? <PauseIcon /> : <PlayIcon />}
+              </button>
+              <button
+                className="secondary icon"
+                onClick={() => stopPlayback('停止しました。')}
+                aria-label="停止"
+              >
+                <StopIcon />
+              </button>
+            </div>
           </div>
         </div>
       </section>
