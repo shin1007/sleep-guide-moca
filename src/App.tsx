@@ -849,35 +849,29 @@ export default function App() {
         }}
       />
 
-      <section className="hero-card">
-        <div className="hero-header">
-          <h1>宮舞モカとおやすみ</h1>
+      <section className="main-content">
+        <div className="speech-section">
+          <div className="stage-label">{activeTrack ? getStageLabel(activeTrack.stage) : '待機中...'}</div>
+          <div className="speech-text">{activeTrack?.speechContent ?? '漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます'}</div>
         </div>
-
-        <div className="status-panel">
-          <div className="speech-section">
-            <div className="stage-label">{activeTrack ? getStageLabel(activeTrack.stage) : '待機中...'}</div>
-            <div className="speech-text">{activeTrack?.speechContent ?? '漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます'}</div>
-          </div>
-          
-          <div className="character-section">
-            <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
-            <div className="hero-buttons">
-              <button
-                className="primary icon"
-                onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}
-                aria-label={status === 'playing' ? '一時停止' : status === 'paused' ? '再開' : '再生'}
-              >
-                {status === 'playing' ? <PauseIcon /> : <PlayIcon />}
-              </button>
-              <button
-                className="secondary icon"
-                onClick={() => stopPlayback('停止しました。')}
-                aria-label="停止"
-              >
-                <StopIcon />
-              </button>
-            </div>
+        
+        <div className="character-section">
+          <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
+          <div className="hero-buttons">
+            <button
+              className="primary icon"
+              onClick={status === 'playing' ? pausePlayback : status === 'paused' ? () => void continuePlayback() : startPlayback}
+              aria-label={status === 'playing' ? '一時停止' : status === 'paused' ? '再開' : '再生'}
+            >
+              {status === 'playing' ? <PauseIcon /> : <PlayIcon />}
+            </button>
+            <button
+              className="secondary icon"
+              onClick={() => stopPlayback('停止しました。')}
+              aria-label="停止"
+            >
+              <StopIcon />
+            </button>
           </div>
         </div>
       </section>
