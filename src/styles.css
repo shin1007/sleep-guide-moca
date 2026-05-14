@@ -139,7 +139,8 @@ select {
   min-width: 72px;
   max-width: 128px;
   justify-self: center;
-  align-self: end;
+  /* 左領域内で上下中央に配置 */
+  align-self: center;
 }
 
 .hero-buttons button.icon {
@@ -228,8 +229,10 @@ button.secondary:hover {
 
 .character-section {
   display: grid;
-  grid-template-columns: 1fr clamp(230px, 30vw, 340px);
-  align-items: end;
+  /* 立ち絵領域を横幅・高さともに倍にして面積を4倍にする */
+  grid-template-columns: 1fr clamp(460px, 60vw, 680px);
+  /* 左カラム（ボタン）で行の高さを決め、右カラムをその高さに揃える */
+  align-items: stretch;
   column-gap: 12px;
   width: 100%;
 }
@@ -238,19 +241,21 @@ button.secondary:hover {
   grid-column: 2;
   justify-self: end;
   width: 100%;
-  height: auto;
+  /* 右カラムは左カラムの高さにあわせる（ボタンの合計高さ） */
+  height: 100%;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
   overflow: hidden;
 }
 
 .character-image {
   width: 100%;
-  max-height: min(54vh, 430px);
+  /* 高さも倍にして表示面積を拡大（ただし画面内に収まるよう上限を設定） */
+  max-height: min(90vh, 860px);
   height: auto;
   object-fit: contain;
-  object-position: right bottom;
+  object-position: right top;
   mix-blend-mode: screen;
   display: block;
 }
