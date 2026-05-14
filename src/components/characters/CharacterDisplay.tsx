@@ -36,10 +36,12 @@ export const CharacterDisplay: React.FC<CharacterDisplayProps> = ({
   isPlaying = false,
 }) => {
   const src = isPlaying ? pickStageImage(stage, subStage) : STANDING_IMAGES[0];
+  // キャッシュバスト：日時を URL に付与して最新画像を強制的に読み込み
+  const bustSrc = `${src}?v=${new Date().toISOString().split('T')[0]}`;
 
   return (
     <div className="character-display">
-      <img src={src} alt="宮舞モカの立ち絵" className="character-image" />
+      <img src={bustSrc} alt="宮舞モカの立ち絵" className="character-image" />
     </div>
   );
 };

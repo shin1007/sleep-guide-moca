@@ -255,7 +255,9 @@ button.secondary:hover {
   max-height: min(90vh, 860px);
   height: auto;
   object-fit: contain;
-  object-position: right top;
+  /* Python でチョーカー位置を検出して中央配置済みなので、
+     object-position は 50% 50% でフルサイズ表示 */
+  object-position: 50% 50%;
   mix-blend-mode: screen;
   display: block;
 }
