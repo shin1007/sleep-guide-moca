@@ -143,7 +143,7 @@ export function getStageHue(stage: StageId) {
 export function createQueue(settings: SleepSettings) {
   const pmr = sleepLibrary.stages.pmr.map((track) => {
     let delayAfterMs = 350; // Default delay
-    if ([6, 11, 14, 17, 21, 24].includes(track.order)) {
+    if ([7, 11, 14, 17, 21, 24].includes(track.order)) {
       delayAfterMs = 5000; // 5 seconds delay
     } else if ([9, 13, 16, 19, 23, 26, 29].includes(track.order)) {
       delayAfterMs = 10000; // 10 seconds delay
