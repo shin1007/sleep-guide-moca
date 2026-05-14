@@ -995,11 +995,12 @@ function WatsonIcon() {
       </svg>
     </div>
   );
+}
 
 function PlayIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M5 3.868v16.264A1 1 0 0 0 6.57 21.2l12.86-8.664A1 1 0 0 0 19.43 11.46L6.57 2.796A1 1 0 0 0 5 3.868z" fill="currentColor"/>
+      <path d="M5 3.868v16.264A1 1 0 0 0 6.57 21.2l12.86-8.664A1 1 0 0 0 19.43 11.46L6.57 2.796A1 1 0 0 0 5 3.868z" fill="currentColor" />
     </svg>
   );
 }
@@ -1019,5 +1020,4 @@ function StopIcon() {
       <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" />
     </svg>
   );
-}
 }
