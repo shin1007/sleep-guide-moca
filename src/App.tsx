@@ -856,7 +856,9 @@ export default function App() {
         </div>
         
         <div className="character-section">
-          <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
+          <div className="character-wrapper">
+            <img src="/moca_standing.jpg" alt="宮舞モカ" className="character-image" />
+          </div>
           <div className="hero-buttons">
             <button
               className="primary icon"
