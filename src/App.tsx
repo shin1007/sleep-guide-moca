@@ -855,7 +855,6 @@ export default function App() {
             <WatsonIcon />
             <div>
               <h1>宮舞モカとおやすみ</h1>
-              <p className="hero-current-speech">{activeTrack?.speechContent ?? '待機中です。'}</p>
             </div>
           </div>
           <div className="hero-buttons">

@@ -277,30 +277,6 @@ button.secondary:hover {
   z-index: 2;
 }
 
-.status-panel::after {
-  content: 'REC';
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: var(--moca-accent);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  opacity: 0.8;
-}
-
-.status-panel::after::before {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 6px;
-  background: var(--moca-accent);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--moca-accent);
-}
-
 .stage-label {
   color: var(--moca-teal);
   font-size: 0.85rem;
