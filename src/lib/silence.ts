@@ -1,18 +1,9 @@
-/**
- * Generate base64-encoded WAV silence for iOS compatibility
- * Pre-generated 10 seconds of 44100Hz mono 16-bit silence
- */
-const SILENCE_DATA_URL = (() => {
-  // WAV header for 10 seconds of silence
-  // This is a minimal WAV file structure encoded in base64
-  const silentWavBase64 = 'UklGRiYgAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==';
-  return `data:audio/wav;base64,${silentWavBase64}`;
-})();
+// iOS のバックグラウンド維持では、data URL よりも実ファイルのほうが安定しやすい。
+// public/silence.wav をそのまま参照する。
+const SILENCE_AUDIO_PATH = `${import.meta.env.BASE_URL}silence.wav`;
 
-/**
- * Get loopable silence audio URL (uses pre-generated base64 data)
- */
+// ループ再生用の無音ファイル URL を返す。
 export function createLoopableSilenceUrl(): string {
-  return SILENCE_DATA_URL;
+  return SILENCE_AUDIO_PATH;
 }
 

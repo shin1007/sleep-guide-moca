@@ -1,5 +1,6 @@
 const CACHE_NAME = 'sleep-guide-moca-shell-v1';
-const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg'];
+const SILENCE_URL = new URL('silence.wav', self.registration.scope).toString();
+const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', SILENCE_URL];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
