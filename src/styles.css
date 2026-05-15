@@ -272,21 +272,23 @@ button.secondary:hover {
   .character-wrapper {
     justify-content: center;
     padding-right: 12px;
+    /* モバイルでは立ち絵がコンテナで切れないように表示を許可する */
+    overflow: visible;
   }
 
   .character-image {
-    /* Allow a larger, viewport-relative image on phones so the face is visible */
-    /* max-width: 100%; */
-    /* Larger: allow up to ~56% of viewport height so face is clearly visible */
-    max-height: min(56vh, calc(var(--hero-button-height) * 2 + 8px));
-    width: fit-content;
+    /* デスクトップと同じ高さを維持し、切れないようにする */
+    max-height: calc(var(--hero-button-height) * 2 + 14px);
+    height: auto;
+    width: auto;
+    max-width: none;
   }
 }
 
 @media (max-width: 380px) {
   .character-image {
-    /* Very small phones: allow even more vertical space if available */
-    max-height: min(62vh, calc(var(--hero-button-height) * 2 + 8px));
+    /* 非常に小さい画面でも同じ高さを優先する（切れないように） */
+    max-height: calc(var(--hero-button-height) * 2 + 14px);
   }
 }
 
