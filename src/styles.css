@@ -29,6 +29,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Hero button height variable used to size the character image responsively. */
+:root {
+  --hero-button-height: clamp(138px, 19vw, 182px);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -147,7 +152,7 @@ select {
 .hero-buttons button.icon {
   padding: 0;
   width: 100%;
-  height: clamp(138px, 19vw, 182px);
+  height: var(--hero-button-height);
   flex: 0 0 auto;
   border-radius: 12px;
   font-size: 0;
@@ -253,7 +258,9 @@ button.secondary:hover {
 .character-image {
   width: 100%;
   /* 高さも倍にして表示面積を拡大（ただし画面内に収まるよう上限を設定） */
-  max-height: min(90vh, 860px);
+  width: auto;
+  /* 立ち絵は「ボタン2つ分」程度の高さに揃える。幅は自動で維持。 */
+  max-height: calc(var(--hero-button-height) * 2 + 14px);
   height: auto;
   object-fit: contain;
   /* Python でチョーカー位置を検出して中央配置済みなので、
