@@ -1035,8 +1035,7 @@ export default function App() {
             onChange={(value) => adjustSettings({ noiseVolume: value })} 
             extra={
               <select
-                id="noise-type"
-                name="noise-type"
+                title="noise-type"
                 value={settings.noiseType}
                 onChange={(e) => adjustSettings({ noiseType: e.target.value as any })}
               >
