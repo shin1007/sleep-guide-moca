@@ -274,15 +274,16 @@ button.secondary:hover {
   }
 
   .character-image {
-    /* Ensure image doesn't overflow horizontally; keep reasonable size on phones */
-    max-width: 58%;
+    /* Ensure image is large enough on phones while avoiding overflow */
+    max-width: 74%;
     max-height: calc(var(--hero-button-height) * 2 + 8px);
   }
 }
 
 @media (max-width: 380px) {
   .character-image {
-    max-width: 64%;
+    /* Smaller phones: allow slightly larger fraction to keep face visible */
+    max-width: 80%;
   }
 }
 
