@@ -1035,12 +1035,14 @@ export default function App() {
             onChange={(value) => adjustSettings({ noiseVolume: value })} 
             extra={
               <select
+                id="noise-type"
+                name="noise-type"
                 value={settings.noiseType}
                 onChange={(e) => adjustSettings({ noiseType: e.target.value as any })}
               >
-                <option value="white">ホワイト</option>
-                <option value="pink">ピンク</option>
-                <option value="brown">ブラウン</option>
+                <option value="white">ホワイトノイズ</option>
+                <option value="pink">ピンクノイズ</option>
+                <option value="brown">ブラウンノイズ</option>
               </select>
             }
           />
