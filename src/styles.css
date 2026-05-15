@@ -43,11 +43,21 @@ body,
 #root {
   min-height: 100%;
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
   position: relative;
+}
+
+/* Make images responsive to avoid overflow from large assets */
+img,
+.character-wrapper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 body::after {
