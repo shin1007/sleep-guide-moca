@@ -234,25 +234,23 @@ button.secondary:hover {
 }
 
 .character-section {
-  display: grid;
-  /* 2カラムレイアウト: 左に立ち絵、右にボタン（余白は中央で吸収） */
-  grid-template-columns: auto 1fr;
-  /* 左カラム（立ち絵）は中身サイズ、右カラムは残り幅を使う */
-  align-items: stretch;
-  column-gap: 12px;
+  /* 横並びにして常に1行で表示する（キャラ左、ボタン右） */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
   width: 100%;
 }
 
 .character-wrapper {
-  grid-column: 1;
-  justify-self: start;
-  /* 幅を中身に合わせる（shrink-to-fit） */
+  /* キャラは中身サイズで左に固定 */
+  flex: 0 0 auto;
   width: auto;
-  /* 高さは中身に合わせて自動で伸縮させる */
   height: auto;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* 左寄せで立ち絵を先に配置 */
+  justify-content: flex-start;
   overflow: visible;
 }
 
