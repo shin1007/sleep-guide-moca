@@ -21,6 +21,8 @@ export default function App() {
   const silenceAudioRef = useRef<HTMLAudioElement | null>(null);
   const noiseControllerRef = useRef<ReturnType<typeof createWhiteNoiseController> | null>(null);
   const gapTimerRef = useRef<GapTimer>(null);
+  const silenceRepeatIntervalRef = useRef<number | null>(null);
+  const silenceRepeatRemainingRef = useRef<number>(0);
   const trackAdvanceTimerRef = useRef<GapTimer>(null);
   const warmupAbortRef = useRef<AbortController | null>(null);
   const trackTransitionRef = useRef(false);
@@ -289,7 +291,7 @@ export default function App() {
       return null;
     }
 
-    return {
+      return {
       isPlaying: statusRef.current === 'playing',
       queue: currentQueueRef.current.map((item) => ({
         id: item.id,
@@ -297,7 +299,8 @@ export default function App() {
         order: item.order,
         title: item.title,
         audioUrl: item.audioUrl,
-        delayAfterMs: item.delayAfterMs,
+          delayAfterMs: item.delayAfterMs,
+          silenceRepeat: item.silenceRepeat,
       })),
       currentIndex: currentIndexRef.current,
       currentTime: currentTimeRef.current,
@@ -343,7 +346,9 @@ export default function App() {
     if (currentPhaseRef.current === 'track') {
       await startCurrentTrack(nextQueue[currentIndexRef.current] ?? nextQueue[0], currentTimeRef.current);
     } else {
-      scheduleGap(currentGapRemainingRef.current || nextQueue[currentIndexRef.current]?.delayAfterMs || 0);
+      const nextItem = nextQueue[currentIndexRef.current];
+      const silenceRepeat = nextItem?.silenceRepeat ?? 0;
+      scheduleGap(currentGapRemainingRef.current || nextItem?.delayAfterMs || 0, silenceRepeat);
     }
 
     scheduleSessionSave();
@@ -359,6 +364,9 @@ export default function App() {
       gapTimerRef.current = null;
     }
     clearTrackAdvanceTimer();
+
+    // clear any repeating-silence activity
+    clearSilenceRepeatInterval();
 
     updateStatus('paused');
     // fade down audio and noise to avoid clicks
@@ -414,6 +422,7 @@ export default function App() {
         silenceAudioRef.current.currentTime = 0;
       } catch {}
     }
+    clearSilenceRepeatInterval();
 
     currentQueueRef.current = [];
     currentIndexRef.current = 0;
@@ -489,11 +498,22 @@ export default function App() {
     }
   }
 
-  function scheduleGap(delayMs: number) {
+  function clearSilenceRepeatInterval() {
+    if (silenceRepeatIntervalRef.current) {
+      window.clearInterval(silenceRepeatIntervalRef.current);
+      silenceRepeatIntervalRef.current = null;
+    }
+    silenceRepeatRemainingRef.current = 0;
+  }
+
+  function scheduleGap(delayMs: number, silenceRepeat = 0) {
     if (gapTimerRef.current) {
       window.clearTimeout(gapTimerRef.current);
     }
     clearTrackAdvanceTimer();
+
+    // clear any previous repeated-silence interval
+    clearSilenceRepeatInterval();
 
     const nextDelay = Math.max(0, delayMs);
     if (document.visibilityState !== 'visible') {
@@ -519,8 +539,43 @@ export default function App() {
       return;
     }
 
+    // If we have a requested number of 1s silent segments, attempt to play
+    // them explicitly (1s × N). We still keep the overall gap timer as a
+    // fallback in case playback is blocked.
+    if (silenceRepeat > 0 && silenceAudioRef.current) {
+      silenceRepeatRemainingRef.current = silenceRepeat;
+
+      const playSilenceOnce = () => {
+        try {
+          const s = silenceAudioRef.current!;
+          s.muted = true;
+          s.volume = 0;
+          s.loop = false;
+          s.src = createLoopableSilenceUrl();
+          s.currentTime = 0;
+          void s.play().catch(() => {});
+        } catch {}
+      };
+
+      // Play first immediately then schedule subsequent plays each 1s.
+      playSilenceOnce();
+      silenceRepeatRemainingRef.current -= 1;
+
+      if (silenceRepeatRemainingRef.current > 0) {
+        silenceRepeatIntervalRef.current = window.setInterval(() => {
+          if (silenceRepeatRemainingRef.current <= 0) {
+            clearSilenceRepeatInterval();
+            return;
+          }
+          playSilenceOnce();
+          silenceRepeatRemainingRef.current -= 1;
+        }, 1000);
+      }
+    }
+
     gapTimerRef.current = window.setTimeout(() => {
       gapTimerRef.current = null;
+      clearSilenceRepeatInterval();
       advanceQueue();
     }, nextDelay);
   }
@@ -598,8 +653,9 @@ export default function App() {
     }
 
     const delayAfterMs = getCurrentShuffleGapMs(currentTrack);
+    const silenceRepeat = currentTrack.silenceRepeat ?? 0;
     if (delayAfterMs > 0) {
-      scheduleGap(delayAfterMs);
+      scheduleGap(delayAfterMs, silenceRepeat);
       scheduleSessionSave();
       return;
     }

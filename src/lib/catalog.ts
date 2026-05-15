@@ -13,6 +13,9 @@ export interface TrackInfo {
 
 export interface QueueItem extends TrackInfo {
   delayAfterMs: number;
+  // If present, indicates how many 1-second silent segments should be played
+  // during the post-track gap (e.g. 5 -> 1s × 5).
+  silenceRepeat?: number;
 }
 
 export interface SleepSettings {
@@ -143,12 +146,18 @@ export function getStageHue(stage: StageId) {
 export function createQueue(settings: SleepSettings) {
   const pmr = sleepLibrary.stages.pmr.map((track) => {
     let delayAfterMs = 350; // Default delay
+    let silenceRepeat: number | undefined;
     if ([7, 11, 14, 17, 21, 24].includes(track.order)) {
-      delayAfterMs = 5000; // 5 seconds delay
+      // replace a single 5s pause with five 1s silent segments
+      silenceRepeat = 5;
+      delayAfterMs = silenceRepeat * 1000;
     } else if ([9, 13, 16, 19, 23, 26, 29].includes(track.order)) {
-      delayAfterMs = 10000; // 10 seconds delay
+      // replace a single 10s pause with ten 1s silent segments
+      silenceRepeat = 10;
+      delayAfterMs = silenceRepeat * 1000;
     }
-    return { ...track, delayAfterMs };
+
+    return { ...track, delayAfterMs, silenceRepeat };
   });
   
   // Split breathing into intro (0-3) and steps (4-6)
@@ -171,10 +180,24 @@ export function createQueue(settings: SleepSettings) {
   const shuffledRemaining = seededShuffle(shuffleRemaining, Date.now());
   const shuffle = shuffledRemaining.map((track, index) => ({
     ...track,
+    // compute a gap in seconds (may be fractional). Keep the full ms value
+    // for accurate scheduling but also provide an integer number of 1s
+    // silent segments where applicable so the UI/playback can play
+    // repeated 1s silences when desired.
     delayAfterMs:
       index === shuffledRemaining.length - 1
         ? 0
-        : randomBetween(settings.shuffleMinGapSec, settings.shuffleMaxGapSec, index + 11) * 1000,
+        : (function () {
+            const gapSec = randomBetween(settings.shuffleMinGapSec, settings.shuffleMaxGapSec, index + 11);
+            return Math.round(gapSec * 1000);
+          })(),
+    silenceRepeat:
+      index === shuffledRemaining.length - 1
+        ? undefined
+        : (function () {
+            const gapSec = randomBetween(settings.shuffleMinGapSec, settings.shuffleMaxGapSec, index + 11);
+            return Math.floor(gapSec); // integer count of 1s to play
+          })(),
   }));
 
   return [...pmr, ...breathing, ...shuffleIntro, ...shuffle];

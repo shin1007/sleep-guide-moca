@@ -9,6 +9,7 @@ export interface PlaybackSession {
     title: string;
     audioUrl: string;
     delayAfterMs: number;
+    silenceRepeat?: number;
   }>;
   currentIndex: number;
   currentTime: number;
