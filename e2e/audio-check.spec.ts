@@ -17,7 +17,7 @@ test.describe('Sleep Guide Moca Audio Verification', () => {
     
     // Check if status changed to playing
     await expect(page.locator('.app-shell')).toHaveClass(/is-playing/);
-    await expect(page.locator('.stage-label')).not.toHaveText('待機中...');
+    await expect(page.locator('.stage-label')).not.toHaveText('待漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます');
     
     // Verify audio element has a source
     const audioSrc = await page.getAttribute('audio', 'src');

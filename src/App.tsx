@@ -951,8 +951,8 @@ export default function App() {
 
       <section className="main-content">
         <div className="speech-section">
-          <div className="stage-label">{activeTrack ? getStageLabel(activeTrack.stage) : '待機中...'}</div>
-          <div className="speech-text">{activeTrack?.speechContent ?? '漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます'}</div>
+          <div className="stage-label">{activeTrack ? getStageLabel(activeTrack.stage) : '漸進的筋弛緩法　▶　4-7-8呼吸法　▶　認知シャッフル睡眠法 の順で進みます'}</div>
+          <div className="speech-text">{activeTrack?.speechContent ?? '私と一緒に心を落ち着けて、深い眠りに就きましょう'}</div>
         </div>
         
         <div className="character-section">
