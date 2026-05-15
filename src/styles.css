@@ -140,12 +140,12 @@ select {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: 70%;
+  /* ボタンは右カラム（残り幅）に入り、必要に応じて縮む */
+  width: auto;
   min-width: 72px;
-  max-width: 128px;
-  grid-column: 1;
+  max-width: 240px;
+  grid-column: 2;
   justify-self: start;
-  /* 左端に配置、上下中央 */
   align-self: center;
 }
 
@@ -235,24 +235,24 @@ button.secondary:hover {
 
 .character-section {
   display: grid;
-  /* 3カラムレイアウト: 左端にボタン、右端に立ち絵、真ん中にスペーサー */
-  grid-template-columns: auto 1fr auto;
-  /* 左カラム（ボタン）で行の高さを決め、右カラムをその高さに揃える */
+  /* 2カラムレイアウト: 左に立ち絵、右にボタン（余白は中央で吸収） */
+  grid-template-columns: auto 1fr;
+  /* 左カラム（立ち絵）は中身サイズ、右カラムは残り幅を使う */
   align-items: stretch;
   column-gap: 12px;
   width: 100%;
 }
 
 .character-wrapper {
-  grid-column: 3;
-  justify-self: end;
+  grid-column: 1;
+  justify-self: start;
   /* 幅を中身に合わせる（shrink-to-fit） */
   width: auto;
   /* 高さは中身に合わせて自動で伸縮させる */
   height: auto;
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* デスクトップでは右寄せ */
+  justify-content: flex-start; /* 左寄せで立ち絵を先に配置 */
   overflow: visible;
 }
 
