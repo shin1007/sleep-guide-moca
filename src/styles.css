@@ -276,7 +276,7 @@ button.secondary:hover {
 
   .character-image {
     /* Allow a larger, viewport-relative image on phones so the face is visible */
-    max-width: 60vw;
+    /* max-width: 100%; */
     /* Larger: allow up to ~56% of viewport height so face is clearly visible */
     max-height: min(56vh, calc(var(--hero-button-height) * 2 + 8px));
     width: fit-content;
