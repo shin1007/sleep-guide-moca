@@ -120,11 +120,32 @@ export default function App() {
     element.addEventListener('ended', handleEndedNative);
     element.addEventListener('timeupdate', handleTimeUpdateNative);
     element.addEventListener('pause', handlePauseNative);
+    // Update speech bubble tail position to align with character image center
+    function updateSpeechTail() {
+      try {
+        const img = document.querySelector('.character-image') as HTMLElement | null;
+        const bubble = document.querySelector('.speech-text') as HTMLElement | null;
+        if (!img || !bubble) return;
+        const imgRect = img.getBoundingClientRect();
+        const bubbleRect = bubble.getBoundingClientRect();
+        const left = imgRect.left + imgRect.width / 2 - bubbleRect.left;
+        bubble.style.setProperty('--speech-tail-left', `${left}px`);
+      } catch (err) {
+        // ignore
+      }
+    }
+
+    updateSpeechTail();
+    window.addEventListener('resize', updateSpeechTail);
+    const charImg = document.querySelector('.character-image');
+    charImg?.addEventListener('load', updateSpeechTail);
 
     return () => {
       element.removeEventListener('ended', handleEndedNative);
       element.removeEventListener('timeupdate', handleTimeUpdateNative);
       element.removeEventListener('pause', handlePauseNative);
+      window.removeEventListener('resize', updateSpeechTail);
+      charImg?.removeEventListener('load', updateSpeechTail);
     };
   }, []);
 

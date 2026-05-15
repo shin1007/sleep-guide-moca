@@ -322,6 +322,37 @@ button.secondary:hover {
   background: rgba(11, 17, 32, 0.5);
   border-radius: 20px;
   border: 1px solid rgba(0, 245, 255, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.speech-text::before,
+.speech-text::after {
+  content: "";
+  position: absolute;
+  /* position relative to bubble using computed CSS variable (px) */
+  left: var(--speech-tail-left, 28px);
+  transform: translateX(-50%);
+  bottom: -13px;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+}
+
+.speech-text::before {
+  /* outer triangle uses the speech border color so the slanted edges match the frame */
+  border-top: 14px solid rgba(0, 245, 255, 0.15);
+  z-index: 0;
+}
+
+.speech-text::after {
+  /* front triangle */
+  border-left-width: 12px;
+  border-right-width: 12px;
+  bottom: -12px;
+  border-top: 12px solid rgba(11, 17, 32, 0.5);
+  z-index: 1;
 }
 
 .controls-grid {
