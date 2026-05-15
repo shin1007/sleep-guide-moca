@@ -16,6 +16,8 @@
   --moca-glow: rgba(0, 245, 255, 0.2);
   --text-main: #f8fafc;
   --text-sub: #94a3b8;
+  /* default speech box height fallback (px) */
+  --speech-box-height: 160px;
 
   color: var(--text-main);
   background:
@@ -263,9 +265,10 @@ button.secondary:hover {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 160px;
-  max-height: 300px;
-  overflow-y: auto;
+  /* 高さを初期化時に計測した値で固定する。フォールバックは 160px */
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   padding: 24px 32px;
   background: transparent;
   border: none;
@@ -282,7 +285,7 @@ button.secondary:hover {
   align-items: center;
   gap: 12px;
   flex-wrap: nowrap;
-  width: 100%;
+  min-height: 120px;
 }
 
 .character-wrapper {
@@ -371,6 +374,10 @@ button.secondary:hover {
   border: 1px solid rgba(0, 245, 255, 0.15);
   position: relative;
   z-index: 1;
+  /* 固定高さを適用（初期化時に計測した47文字分） */
+  height: var(--speech-box-height, auto);
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .speech-text::before {

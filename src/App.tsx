@@ -77,6 +77,45 @@ export default function App() {
     };
   }, []);
 
+  // 初期化時に日本語47文字を仮レンダリングして、吹き出しに必要な高さを計測し
+  // CSS変数 `--speech-box-height` に設定する。
+  // 理由: 実機での折り返しを想定して最適な高さでボックスを固定するため。
+  useEffect(() => {
+    try {
+      const sample = 'あ'.repeat(47);
+      const base = document.querySelector('.speech-text') as HTMLElement | null;
+      if (!base) return;
+      // クローンを作り、オフスクリーンに追加して高さを測定する（既存のスタイルを継承させるため）
+      const clone = base.cloneNode(false) as HTMLElement;
+      clone.textContent = sample;
+      clone.style.position = 'absolute';
+      clone.style.visibility = 'hidden';
+      clone.style.left = '-9999px';
+      // match the rendered width of the original bubble so text wraps the same way
+      const baseRect = base.getBoundingClientRect();
+      if (baseRect.width && baseRect.width > 0) {
+        clone.style.width = `${Math.ceil(baseRect.width)}px`;
+      }
+      clone.style.top = '0';
+      clone.style.height = 'auto';
+      clone.style.maxHeight = 'none';
+      clone.style.overflow = 'visible';
+      document.body.appendChild(clone);
+      // フォント・レンダリングが安定するまで1フレーム待つ（安全性向上）
+      requestAnimationFrame(() => {
+        try {
+          const rect = clone.getBoundingClientRect();
+          const height = Math.ceil(rect.height);
+          document.documentElement.style.setProperty('--speech-box-height', `${height}px`);
+        } finally {
+          clone.remove();
+        }
+      });
+    } catch (err) {
+      // 計測が失敗しても致命的ではないので無視
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
       if (gapTimerRef.current) {
