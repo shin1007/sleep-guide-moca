@@ -251,23 +251,39 @@ button.secondary:hover {
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-end; /* デスクトップでは右寄せ */
   overflow: hidden;
 }
 
 .character-image {
-  width: 100%;
-  /* 高さも倍にして表示面積を拡大（ただし画面内に収まるよう上限を設定） */
   width: auto;
   /* 立ち絵は「ボタン2つ分」程度の高さに揃える。幅は自動で維持。 */
   max-height: calc(var(--hero-button-height) * 2 + 14px);
   height: auto;
   object-fit: contain;
-  /* Python でチョーカー位置を検出して中央配置済みなので、
-     object-position は 50% 50% でフルサイズ表示 */
+  /* チョーカー位置に合わせて中央を意識した配置 */
   object-position: 50% 50%;
   mix-blend-mode: screen;
   display: block;
+}
+
+/* Mobile: center the character and limit width so face stays visible on narrow screens */
+@media (max-width: 640px) {
+  .character-wrapper {
+    justify-content: center;
+  }
+
+  .character-image {
+    /* Ensure image doesn't overflow horizontally; keep reasonable size on phones */
+    max-width: 58%;
+    max-height: calc(var(--hero-button-height) * 2 + 8px);
+  }
+}
+
+@media (max-width: 380px) {
+  .character-image {
+    max-width: 64%;
+  }
 }
 
 .status-panel::before {
