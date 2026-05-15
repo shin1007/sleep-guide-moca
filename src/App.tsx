@@ -597,17 +597,11 @@ export default function App() {
   }
 
   function getCurrentShuffleGapMs(track: QueueItem) {
-    if (track.stage !== 'shuffle' || track.order === 0) {
-      return track.delayAfterMs;
-    }
-
-    const nextTrack = currentQueueRef.current[currentIndexRef.current + 1];
-    if (!nextTrack || nextTrack.stage !== 'shuffle') {
-      return 0;
-    }
-
-    const currentSettings = settingsRef.current;
-    return randomBetween(currentSettings.shuffleMinGapSec, currentSettings.shuffleMaxGapSec, currentIndexRef.current + 11) * 1000;
+    // Use the delay already computed when the queue was built. The queue's
+    // `delayAfterMs` is seeded and stable for the run, so recomputing here
+    // caused gaps to be missing or inconsistent.
+    if (!track) return 0;
+    return track.delayAfterMs ?? 0;
   }
 
   function onAudioPause() {
