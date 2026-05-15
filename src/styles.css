@@ -427,6 +427,9 @@ button.secondary:hover {
 }
 
 .slider-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
   margin-bottom: 28px;
 }
 
@@ -434,20 +437,24 @@ button.secondary:hover {
   margin-bottom: 0;
 }
 
-.slider-row span {
+.slider-content {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slider-content > div {
   font-size: 0.95rem;
   color: var(--text-sub);
 }
 
-.slider-row span strong {
+.slider-percentage {
   color: var(--moca-teal);
   font-family: 'Courier New', Courier, monospace;
   font-size: 1.15rem;
   text-shadow: 0 0 8px var(--moca-glow);
+  white-space: nowrap;
 }
 
 .slider-row span select {
@@ -580,8 +587,13 @@ input[type="number"]:focus, select:focus {
     max-width: 140px;
     gap: 28px; /* match desktop spacing */
     order: 0;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+  }
+  .hero-buttons button.icon.primary 
+  .hero-buttons button.icon.secondary{
+    align-self: flex-end;
+    margin-right: 0px;
   }
 
   /* Reduce each button height so 2*height + gap remains equal to previous mobile layout */
@@ -589,6 +601,7 @@ input[type="number"]:focus, select:focus {
     width: 100%;
     height: calc(var(--hero-button-height) * 0.85 - 9px);
   }
+
 
   .character-wrapper {
     width: auto;

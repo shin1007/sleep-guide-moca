@@ -1026,7 +1026,6 @@ export default function App() {
 
         <article className="panel">
           <div className="panel-head">
-            <h2>音量ミキサー</h2>
           </div>
 
           <Slider label="ボイス音量" value={settings.voiceVolume} onChange={(value) => adjustSettings({ voiceVolume: value })} />
@@ -1049,12 +1048,11 @@ export default function App() {
 
         <article className="panel">
           <div className="panel-head">
-              <h2>認知シャッフル</h2>
             </div>
 
           <div className="range-grid">
             <label>
-              <span>間隔（秒）</span>
+              <span>シャッフル間隔（秒）</span>
               <input
                 type="number"
                 min={0.5}
@@ -1093,14 +1091,14 @@ export default function App() {
 function Slider({ label, value, onChange, extra }: { label: string; value: number; onChange: (value: number) => void; extra?: React.ReactNode }) {
   return (
     <label className="slider-row">
-      <span>
+      <div className="slider-content">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {label}
           {extra}
         </div>
-        <strong>{Math.round(value * 100)}%</strong>
-      </span>
-      <input type="range" min={0} max={1} step={0.01} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <input type="range" min={0} max={1} step={0.01} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      </div>
+      <strong className="slider-percentage">{Math.round(value * 100)}%</strong>
     </label>
   );
 }
