@@ -326,33 +326,20 @@ button.secondary:hover {
   z-index: 1;
 }
 
-.speech-text::before,
-.speech-text::after {
+.speech-text::before {
   content: "";
   position: absolute;
   /* position relative to bubble using computed CSS variable (px) */
   left: var(--speech-tail-left, 28px);
-  transform: translateX(-50%);
-  bottom: -13px;
-  width: 0;
-  height: 0;
-  border-left: 14px solid transparent;
-  border-right: 14px solid transparent;
-}
-
-.speech-text::before {
-  /* outer triangle uses the speech border color so the slanted edges match the frame */
-  border-top: 14px solid rgba(0, 245, 255, 0.15);
-  z-index: 0;
-}
-
-.speech-text::after {
-  /* front triangle */
-  border-left-width: 12px;
-  border-right-width: 12px;
-  bottom: -12px;
-  border-top: 12px solid rgba(11, 17, 32, 0.5);
+  transform: translateX(-50%) rotate(180deg);
+  bottom: -14px;
+  width: 28px;
+  height: 14px;
+  background-image: url("data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2028%2014'><polygon%20points='0,14%2014,0%2028,14'%20fill='%230b1120'/%3E%3Cpath%20d='M0,14%20L14,0'%20stroke='%2300f5ff'%20stroke-opacity='0.15'%20stroke-width='2'%20stroke-linecap='round'%20fill='none'/%3E%3Cpath%20d='M14,0%20L28,14'%20stroke='%2300f5ff'%20stroke-opacity='0.15'%20stroke-width='2'%20stroke-linecap='round'%20fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
   z-index: 1;
+  pointer-events: none;
 }
 
 .controls-grid {
