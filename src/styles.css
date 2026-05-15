@@ -120,8 +120,8 @@ select {
 .panel {
   border: 1px solid rgba(0, 245, 255, 0.15);
   background: rgba(11, 17, 32, 0.7);
-  backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
   box-shadow: 
     0 10px 30px -10px rgba(0, 0, 0, 0.5),
     inset 0 0 20px rgba(0, 245, 255, 0.03);
@@ -241,6 +241,7 @@ button.secondary {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -477,6 +478,7 @@ button.secondary:hover {
 
 input[type="range"] {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 8px;
   background: rgba(255, 255, 255, 0.05);
