@@ -246,13 +246,14 @@ button.secondary:hover {
 .character-wrapper {
   grid-column: 3;
   justify-self: end;
-  width: 100%;
-  /* 右カラムは左カラムの高さにあわせる（ボタンの合計高さ） */
-  height: 100%;
+  /* 幅を中身に合わせる（shrink-to-fit） */
+  width: auto;
+  /* 高さは中身に合わせて自動で伸縮させる */
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: flex-end; /* デスクトップでは右寄せ */
-  overflow: hidden;
+  overflow: visible;
 }
 
 .character-image {
@@ -270,29 +271,25 @@ button.secondary:hover {
 /* Mobile: center the character and limit width so face stays visible on narrow screens */
 @media (max-width: 640px) {
   .character-wrapper {
-    /* 右端を揃えて、顔が見えるように余白を調整 */
-    justify-content: flex-end;
-    padding-right: 8px;
+    justify-content: center;
+    padding-right: 12px;
+    /* モバイルでは立ち絵がコンテナで切れないように表示を許可する */
     overflow: visible;
   }
 
   .character-image {
-    /* デスクトップと同じ高さを維持し、切れないようにする
-       かつ右端を揃えて顔が見えるようにする */
+    /* デスクトップと同じ高さを維持し、切れないようにする */
     max-height: calc(var(--hero-button-height) * 2 + 14px);
     height: auto;
     width: auto;
     max-width: none;
-    object-position: 100% 50%;
   }
 }
 
 @media (max-width: 380px) {
   .character-image {
-    /* 非常に小さい画面でも同じ高さを優先する（切れないように）
-       右端合わせで顔を見せる */
+    /* 非常に小さい画面でも同じ高さを優先する（切れないように） */
     max-height: calc(var(--hero-button-height) * 2 + 14px);
-    object-position: 100% 50%;
   }
 }
 
