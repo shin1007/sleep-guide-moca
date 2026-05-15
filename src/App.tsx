@@ -23,6 +23,7 @@ export default function App() {
   const gapTimerRef = useRef<GapTimer>(null);
   const silenceRepeatIntervalRef = useRef<number | null>(null);
   const silenceRepeatRemainingRef = useRef<number>(0);
+  const silenceEndedHandlerRef = useRef<((this: HTMLAudioElement, ev: Event) => any) | null>(null);
   const trackAdvanceTimerRef = useRef<GapTimer>(null);
   const warmupAbortRef = useRef<AbortController | null>(null);
   const trackTransitionRef = useRef(false);
@@ -504,9 +505,20 @@ export default function App() {
       silenceRepeatIntervalRef.current = null;
     }
     silenceRepeatRemainingRef.current = 0;
+    if (silenceEndedHandlerRef.current && silenceAudioRef.current) {
+      silenceAudioRef.current.removeEventListener('ended', silenceEndedHandlerRef.current);
+      silenceEndedHandlerRef.current = null;
+    }
   }
 
   function scheduleGap(delayMs: number, silenceRepeat = 0) {
+    console.debug('scheduleGap requested', {
+      currentIndex: currentIndexRef.current,
+      delayMs,
+      silenceRepeat,
+      currentId: currentQueueRef.current[currentIndexRef.current]?.id,
+    });
+
     if (gapTimerRef.current) {
       window.clearTimeout(gapTimerRef.current);
     }
@@ -516,14 +528,9 @@ export default function App() {
     clearSilenceRepeatInterval();
 
     const nextDelay = Math.max(0, delayMs);
-    if (document.visibilityState !== 'visible') {
-      currentPhaseRef.current = 'track';
-      setPhase('track');
-      setGapRemainingMs(0);
-      currentGapRemainingRef.current = 0;
-      advanceQueue();
-      return;
-    }
+    // Always schedule the gap even when the tab is not visible. Background
+    // throttling can affect timers, so repeated 1s silence uses the audio
+    // element's "ended" events which are more reliable in background.
 
     if (statusRef.current !== 'playing') {
       updateStatus('playing');
@@ -543,39 +550,53 @@ export default function App() {
     // them explicitly (1s × N). We still keep the overall gap timer as a
     // fallback in case playback is blocked.
     if (silenceRepeat > 0 && silenceAudioRef.current) {
+      const s = silenceAudioRef.current;
+      try {
+        s.muted = true;
+        s.volume = 0;
+        s.loop = false;
+        s.src = createLoopableSilenceUrl();
+        s.currentTime = 0;
+      } catch {}
+
       silenceRepeatRemainingRef.current = silenceRepeat;
 
-      const playSilenceOnce = () => {
+      // Play once immediately.
+      try {
+        void s.play().catch(() => {});
+      } catch {}
+
+      // Use the 'ended' event to chain subsequent 1s silent plays. This is
+      // more reliable when the page is backgrounded compared to setInterval.
+      const handler = function () {
+        // decrement remaining after each ended
+        silenceRepeatRemainingRef.current -= 1;
+        if (silenceRepeatRemainingRef.current <= 0) {
+          // cleanup
+          if (silenceEndedHandlerRef.current && silenceAudioRef.current) {
+            silenceAudioRef.current.removeEventListener('ended', silenceEndedHandlerRef.current);
+          }
+          silenceEndedHandlerRef.current = null;
+          return;
+        }
+
         try {
-          const s = silenceAudioRef.current!;
-          s.muted = true;
-          s.volume = 0;
-          s.loop = false;
-          s.src = createLoopableSilenceUrl();
-          s.currentTime = 0;
-          void s.play().catch(() => {});
+          // replay the silence clip
+          if (silenceAudioRef.current) {
+            silenceAudioRef.current.currentTime = 0;
+            void silenceAudioRef.current.play().catch(() => {});
+          }
         } catch {}
       };
 
-      // Play first immediately then schedule subsequent plays each 1s.
-      playSilenceOnce();
-      silenceRepeatRemainingRef.current -= 1;
-
-      if (silenceRepeatRemainingRef.current > 0) {
-        silenceRepeatIntervalRef.current = window.setInterval(() => {
-          if (silenceRepeatRemainingRef.current <= 0) {
-            clearSilenceRepeatInterval();
-            return;
-          }
-          playSilenceOnce();
-          silenceRepeatRemainingRef.current -= 1;
-        }, 1000);
-      }
+      silenceEndedHandlerRef.current = handler;
+      s.addEventListener('ended', handler);
     }
 
     gapTimerRef.current = window.setTimeout(() => {
       gapTimerRef.current = null;
       clearSilenceRepeatInterval();
+      console.debug('gap timeout fired', { currentIndex: currentIndexRef.current });
       advanceQueue();
     }, nextDelay);
   }
@@ -597,11 +618,17 @@ export default function App() {
   }
 
   function getCurrentShuffleGapMs(track: QueueItem) {
-    // Use the delay already computed when the queue was built. The queue's
-    // `delayAfterMs` is seeded and stable for the run, so recomputing here
-    // caused gaps to be missing or inconsistent.
+    // Use the delay already computed when the queue was built. Prefer the
+    // explicit `delayAfterMs`; if that's missing or zero but a
+    // `silenceRepeat` exists, use that as a fallback (1s × N).
     if (!track) return 0;
-    return track.delayAfterMs ?? 0;
+    if (typeof track.delayAfterMs === 'number' && track.delayAfterMs > 0) {
+      return track.delayAfterMs;
+    }
+    if (typeof track.silenceRepeat === 'number' && track.silenceRepeat > 0) {
+      return track.silenceRepeat * 1000;
+    }
+    return 0;
   }
 
   function onAudioPause() {
@@ -648,6 +675,7 @@ export default function App() {
 
     const delayAfterMs = getCurrentShuffleGapMs(currentTrack);
     const silenceRepeat = currentTrack.silenceRepeat ?? 0;
+    console.debug('onAudioEnded:', { id: currentTrack.id, delayAfterMs, silenceRepeat });
     if (delayAfterMs > 0) {
       scheduleGap(delayAfterMs, silenceRepeat);
       scheduleSessionSave();
