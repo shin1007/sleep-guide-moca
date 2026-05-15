@@ -213,8 +213,8 @@ export default function App() {
       return;
     }
 
-    setVoiceVolume(clamp(settings.masterVolume * settings.voiceVolume));
-  }, [settings.masterVolume, settings.voiceVolume, status]);
+    setVoiceVolume(clamp(settings.voiceVolume));
+  }, [settings.voiceVolume, status]);
 
   useEffect(() => {
     if (status === 'playing') {
@@ -240,7 +240,7 @@ export default function App() {
         } catch {}
       }
     }
-  }, [status, settings.masterVolume, settings.noiseVolume, settings.noiseType]);
+  }, [status, settings.noiseVolume, settings.noiseType]);
 
   function updateSettings(nextSettings: SleepSettings) {
     settingsRef.current = nextSettings;
@@ -472,7 +472,7 @@ export default function App() {
         console.warn('Audio reset warning:', err);
       }
     }
-    const voiceVol = clamp(settings.masterVolume * settings.voiceVolume);
+    const voiceVol = clamp(settings.voiceVolume);
 
     console.log(`Starting track: ${track.speechContent}, volume: ${Math.round(voiceVol * 100)}%, src: ${track.audioUrl}`);
 
@@ -820,7 +820,7 @@ export default function App() {
   }
 
   function syncNoisePlayback() {
-    const noiseVol = clamp(settingsRef.current.masterVolume * settingsRef.current.noiseVolume * 0.25);
+    const noiseVol = clamp(settingsRef.current.noiseVolume * 0.25);
     if (!noiseControllerRef.current) return;
     
     if (noiseVol > 0.001) {
@@ -884,10 +884,10 @@ export default function App() {
 
   const volumeSummary = useMemo(
     () => ({
-      voice: Math.round(settings.voiceVolume * settings.masterVolume * 100),
-      noise: Math.round(settings.noiseVolume * settings.masterVolume * 0.25 * 100),
+      voice: Math.round(settings.voiceVolume * 100),
+      noise: Math.round(settings.noiseVolume * 0.25 * 100),
     }),
-    [settings.masterVolume, settings.noiseVolume, settings.voiceVolume],
+    [settings.noiseVolume, settings.voiceVolume],
   );
 
   return (
@@ -969,7 +969,6 @@ export default function App() {
             <h2>音量ミキサー</h2>
           </div>
 
-          <Slider label="マスター音量" value={settings.masterVolume} onChange={(value) => adjustSettings({ masterVolume: value })} />
           <Slider label="ボイス音量" value={settings.voiceVolume} onChange={(value) => adjustSettings({ voiceVolume: value })} />
           <Slider 
             label="ノイズ音量" 
@@ -995,30 +994,16 @@ export default function App() {
 
           <div className="range-grid">
             <label>
-              <span>最小間隔</span>
+              <span>間隔（秒）</span>
               <input
                 type="number"
                 min={0.5}
-                max={10}
+                max={60}
                 step={0.1}
-                value={settings.shuffleMinGapSec}
-                onChange={(event) => adjustSettings({ shuffleMinGapSec: Number(event.target.value) })}
+                value={settings.shuffleGapSec}
+                onChange={(event) => adjustSettings({ shuffleGapSec: Number(event.target.value) })}
               />
             </label>
-            <label>
-              <span>最大間隔</span>
-              <input
-                type="number"
-                min={0.5}
-                max={10}
-                step={0.1}
-                value={settings.shuffleMaxGapSec}
-                onChange={(event) => adjustSettings({ shuffleMaxGapSec: Number(event.target.value) })}
-              />
-            </label>
-          </div>
-
-          <div className="timer-row">
             <label>
               <span>スリープタイマー</span>
               <select
@@ -1032,7 +1017,6 @@ export default function App() {
                 ))}
               </select>
             </label>
-            <div className="timer-remaining">{timerEndsAt ? `終了予定 ${new Date(timerEndsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '未設定'}</div>
           </div>
 
           <p className="help-text">再開時は、同じ単語列と位置を維持したまま続行します。</p>

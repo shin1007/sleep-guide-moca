@@ -40,10 +40,10 @@ test.describe('Sleep Guide Moca Audio Verification', () => {
     await expect(page.locator('.app-shell')).toHaveClass(/is-playing/);
     await page.waitForTimeout(500); // Wait for fade in etc
 
-    const masterSlider = page.locator('label.slider-row').filter({ hasText: 'マスター音量' }).locator('input[type="range"]');
-    
-    // Change value
-    await masterSlider.fill('0.5');
+    const voiceSlider = page.locator('label.slider-row').filter({ hasText: 'ボイス音量' }).locator('input[type="range"]');
+
+    // Change value (voice volume directly controls playback volume)
+    await voiceSlider.fill('0.5');
     await page.waitForTimeout(100); // Allow react state to propagate
 
     // Verify internal volume of audio element changed
@@ -54,11 +54,11 @@ test.describe('Sleep Guide Moca Audio Verification', () => {
         audioPaused: audio ? audio.paused : true
       };
     });
-    
+
     console.log('Detected Volumes:', volumes);
-    
-    // volume = masterVolume * voiceVolume (initially 0.5 * 0.95 = 0.475)
-    expect(volumes.elementVolume).toBeCloseTo(0.475, 2);
+
+    // volume = voiceVolume (initially after change 0.5)
+    expect(volumes.elementVolume).toBeCloseTo(0.5, 2);
   });
 
   test('should not have audio errors on play', async ({ page }) => {

@@ -19,12 +19,10 @@ export interface QueueItem extends TrackInfo {
 }
 
 export interface SleepSettings {
-  masterVolume: number;
   voiceVolume: number;
   noiseVolume: number;
   noiseType: NoiseType;
-  shuffleMinGapSec: number;
-  shuffleMaxGapSec: number;
+  shuffleGapSec: number;
   timerMinutes: number;
 }
 
@@ -47,12 +45,10 @@ const textModules = {
 } as Record<string, string>;
 
 export const defaultSettings: SleepSettings = {
-  masterVolume: 0.9,
   voiceVolume: 0.95,
   noiseVolume: 0.01,
   noiseType: 'white',
-  shuffleMinGapSec: 5,
-  shuffleMaxGapSec: 10,
+  shuffleGapSec: 7,
   timerMinutes: 35,
 };
 
@@ -188,14 +184,14 @@ export function createQueue(settings: SleepSettings) {
       index === shuffledRemaining.length - 1
         ? 0
         : (function () {
-            const gapSec = randomBetween(settings.shuffleMinGapSec, settings.shuffleMaxGapSec, index + 11);
+            const gapSec = settings.shuffleGapSec;
             return Math.round(gapSec * 1000);
           })(),
     silenceRepeat:
       index === shuffledRemaining.length - 1
         ? undefined
         : (function () {
-            const gapSec = randomBetween(settings.shuffleMinGapSec, settings.shuffleMaxGapSec, index + 11);
+            const gapSec = settings.shuffleGapSec;
             return Math.floor(gapSec); // integer count of 1s to play
           })(),
   }));

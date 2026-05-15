@@ -23,7 +23,7 @@
 
 Shuffle ステージでは、トラック再生後に無音の Gap 期間が挿入される：
 
-- **Gap 期間**: 5～10 秒（設定可能 `shuffleMinGapSec`, `shuffleMaxGapSec`）
+- **Gap 期間**: 固定値（設定 `shuffleGapSec`、秒）
 - **目的**: ノイズだけの期間を設けて、単語連想の心理効果を維持
 - **ノイズ継続**: Gap 中もノイズは継続再生（途切れない）
 
@@ -67,10 +67,9 @@ idle
 
 **計算式**:
 ```
-effectiveNoiseVolume = masterVolume × noiseVolume × 0.25
+effectiveNoiseVolume = noiseVolume × 0.25
 ```
 
-- `masterVolume`: 0～1 (全体ボリューム)
 - `noiseVolume`: 0～1 (ノイズ相対ボリューム)
 - `× 0.25`: ノイズ過大防止の固定係数
 
@@ -169,7 +168,7 @@ AudioContext が suspend 状態なら、明示的に resume する。
 
 **計算式**:
 ```
-voiceVolume = masterVolume × voiceVolume
+effectiveVoiceVolume = voiceVolume
 ```
 
 - 毎回の設定変更で即座に `audioRef.current.volume` に適用
@@ -198,10 +197,7 @@ function scheduleGap() {
   currentPhaseRef.current = 'gap';
   setPhase('gap');
   
-  const gapDurationMs = randomInt(
-    settings.shuffleMinGapSec * 1000,
-    settings.shuffleMaxGapSec * 1000
-  );
+  const gapDurationMs = Math.max(0, Math.floor(settings.shuffleGapSec * 1000));
   
   gapTimerRef.current = setTimeout(() => {
     advanceQueue();
@@ -221,12 +217,10 @@ function scheduleGap() {
 
 ```typescript
 interface SleepSettings {
-  masterVolume: number;       // 0～1, default: 0.9
   voiceVolume: number;        // 0～1, default: 0.95
   noiseVolume: number;        // 0～1, default: 0.01
   noiseType: NoiseType;       // 'white' | 'pink' | 'brown', default: 'white'
-  shuffleMinGapSec: number;   // default: 5
-  shuffleMaxGapSec: number;   // default: 10
+  shuffleGapSec: number;      // 秒, default: 7
   timerMinutes: number;       // default: 35
 }
 ```
@@ -272,7 +266,7 @@ useEffect(() => {
     syncNoisePlayback();
     // ... silence play
   }
-}, [status, settings.masterVolume, settings.noiseVolume, settings.noiseType]);
+}, [status, settings.noiseVolume, settings.noiseType]);
 ```
 
 - `status` 変更時のみ実行
@@ -282,9 +276,9 @@ useEffect(() => {
 ```typescript
 useEffect(() => {
   if (status === 'playing' && audioRef.current) {
-    audioRef.current.volume = clamp(settings.masterVolume * settings.voiceVolume);
+    audioRef.current.volume = clamp(settings.voiceVolume);
   }
-}, [settings.masterVolume, settings.voiceVolume, ..., status]);
+}, [settings.voiceVolume, ..., status]);
 ```
 
 - すべての音量・タイプ関連設定で再実行
