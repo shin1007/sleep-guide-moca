@@ -458,6 +458,16 @@ button.secondary:hover {
   white-space: nowrap;
 }
 
+.slider-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-row-controls input[type="range"] {
+  flex: 1 1 auto;
+}
+
 .slider-row span select {
   margin-left: 12px;
   padding: 6px 12px;

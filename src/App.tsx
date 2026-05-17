@@ -1097,9 +1097,11 @@ function Slider({ label, value, onChange, extra }: { label: string; value: numbe
           {label}
           {extra}
         </div>
-        <input type="range" min={0} max={1} step={0.01} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <div className="slider-row-controls">
+          <input type="range" min={0} max={1} step={0.01} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+          <strong className="slider-percentage">{Math.round(value * 100)}%</strong>
+        </div>
       </div>
-      <strong className="slider-percentage">{Math.round(value * 100)}%</strong>
     </label>
   );
 }
