@@ -1,6 +1,7 @@
 import { createLoopableSilenceUrl } from './silence';
 
 export type StageId = 'pmr' | 'breathing' | 'shuffle';
+export type NoiseType = 'white' | 'brown' | 'pink';
 
 export interface TrackInfo {
   id: string;
