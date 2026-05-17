@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      .bg { fill: #0b1220 }
+      .card { fill: rgba(255,255,255,0.02); }
+      .title { font-family: 'Noto Sans JP', sans-serif; fill: #ffffff; font-size: 48px; font-weight: 700 }
+      .subtitle { font-family: 'Noto Sans JP', sans-serif; fill: #cbd5e1; font-size: 24px }
+    </style>
+  </defs>
+  <rect width="1200" height="630" class="bg" />
+  <rect x="40" y="40" width="1120" height="550" rx="20" class="card" />
+  <!-- 立ち絵（外部画像を参照） -->
+  <image href="/standing/psd/test-moca-01.png" x="60" y="60" width="510" height="510" preserveAspectRatio="xMidYMid slice" />
+  <!-- テキスト -->
+  <g transform="translate(600,160)">
+    <text x="0" y="0" class="title">宮舞モカとおやすみ</text>
+    <text x="0" y="70" class="subtitle">PMR、4-7-8 呼吸法、認知シャッフルで眠りへ</text>
+  </g>
+</svg>
