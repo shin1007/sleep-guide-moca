@@ -9,6 +9,12 @@
   "description": "PMR、478呼吸法、認知シャッフルを順次再生する軽量PWA",
   "icons": [
     {
+      "src": "/standing/psd/test-moca-01.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",

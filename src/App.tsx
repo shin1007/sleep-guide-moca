@@ -1109,13 +1109,7 @@ function Slider({ label, value, onChange, extra }: { label: string; value: numbe
 function WatsonIcon() {
   return (
     <div className="watson-icon">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C10.3 2 9 3.3 9 5V6.1C7.3 6.6 6 8.1 6 10V17C6 18.1 6.9 19 8 19H16C17.1 19 18 18.1 18 17V10C18 8.1 16.7 6.6 15 6.1V5C15 3.3 13.7 2 12 2ZM11 5C11 4.4 11.4 4 12 4C12.6 4 13 4.4 13 5V6H11V5ZM8 10C8 8.9 8.9 8 10 8H14C15.1 8 16 8.9 16 10V17H8V10ZM10 11V13H11V11H10ZM13 11V13H14V11H13ZM10 14V16H11V14H10ZM13 14V16H14V14H13Z" fill="currentColor"/>
-        <path d="M7 21C7 20.4 7.4 20 8 20H16C16.6 20 17 20.4 17 21C17 21.6 16.6 22 16 22H8C7.4 22 7 21.6 7 21Z" fill="currentColor"/>
-        {/* Cat Ears */}
-        <path d="M6 8L4 5L8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin='round'/>
-        <path d="M18 8L20 5L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin='round'/>
-      </svg>
+      <img src="/standing/psd/test-moca-01.png" alt="宮舞モカ" />
     </div>
   );
 }
