@@ -64,7 +64,8 @@ export const CharacterDisplay: React.FC<CharacterDisplayProps> = ({
   subStage = 0,
   isPlaying = false,
 }) => {
-  const src = isPlaying ? pickStageImage(stage, subStage) : STANDING_IMAGES[0];
+  // 再生中はステージに応じた画像、停止時は既存の PMR 立ち絵をフォールバックとして使用
+  const src = isPlaying ? pickStageImage(stage, subStage) : PMR_IMAGES[0];
   // キャッシュバスト：日時を URL に付与して最新画像を強制的に読み込み
   const bustSrc = `${src}?v=${new Date().toISOString().split('T')[0]}`;
 
